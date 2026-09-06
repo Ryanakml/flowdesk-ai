@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { AppSidebar } from "./AppSidebar.js";
 import { Header } from "./Header.js";
 import { useAuth } from "../../features/auth/context.js";
@@ -13,6 +14,8 @@ export function AppShell({ children }: AppShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { errorMsg, successMsg, showToast } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isInboxRoute = pathname.startsWith("/inbox");
 
   return (
     <div
@@ -85,7 +88,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Main Routed Content Area */}
         <main
-          className="flex-1 overflow-y-auto min-w-0 bg-background"
+          className={`flex-1 min-w-0 bg-background ${isInboxRoute ? "overflow-hidden" : "overflow-y-auto"}`}
           id="main-content"
           data-testid="main-content"
         >
