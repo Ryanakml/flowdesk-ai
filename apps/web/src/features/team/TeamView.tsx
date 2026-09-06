@@ -1,6 +1,35 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import type { MembershipMember } from "@flowdesk/contracts";
 import { type RoleKey, hasPermission } from "@flowdesk/domain";
+import { Plus, UserX } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@flowdesk/ui";
 import { listMembers, inviteMember, updateMemberRole, revokeMember } from "../../api.js";
 import { useAuth } from "../auth/context.js";
 
@@ -101,191 +130,191 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
     }
   };
 
+  const getRoleBadgeVariant = (role: string) => {
+    switch (role) {
+      case "owner":
+        return "default";
+      case "admin":
+        return "secondary";
+      case "supervisor":
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
   return (
-    <>
-      <div className="glass-card">
-        <div className="section-header">
-          <div>
-            <h2 className="section-title">Team Members</h2>
-            <p className="section-subtitle">
+    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8" data-testid="team-view">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <div className="space-y-1">
+            <CardTitle className="text-xl font-bold">Team Members</CardTitle>
+            <CardDescription>
               Manage members and role permissions for {activeOrg?.name}.
-            </p>
+            </CardDescription>
           </div>
           {canInvite && (
-            <button
-              type="button"
+            <Button
               onClick={() => setShowInviteModal(true)}
-              className="btn btn-primary btn-sm"
+              size="sm"
               id="invite-member-btn"
+              data-testid="invite-member-btn"
+              className="cursor-pointer"
             >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
+              <Plus className="mr-1.5 size-4" />
               Invite Member
-            </button>
+            </Button>
           )}
-        </div>
-
-        {loadingMembers ? (
-          <div style={{ textAlign: "center", padding: "2rem" }}>Loading team…</div>
-        ) : (
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Member</th>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  {canRevokeMember && <th>Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {members.map((member) => (
-                  <tr key={member.id}>
-                    <td>
-                      <strong>{member.displayName}</strong>
-                    </td>
-                    <td>{member.email}</td>
-                    <td>
-                      {canModifyRole ? (
-                        <select
-                          value={member.roleKey}
-                          onChange={(e) =>
-                            void handleRoleChange(member.id, e.target.value as RoleKey)
-                          }
-                          className="form-select"
-                          style={{ width: "auto", padding: "0.2rem 0.5rem" }}
-                          aria-label={`Change role for ${member.displayName}`}
-                        >
-                          <option value="owner">Owner</option>
-                          <option value="admin">Admin</option>
-                          <option value="supervisor">Supervisor</option>
-                          <option value="agent">Agent</option>
-                          <option value="analyst">Analyst</option>
-                          <option value="billing_admin">Billing Admin</option>
-                        </select>
-                      ) : (
-                        <span className={`role-pill ${member.roleKey}`}>
-                          {member.roleKey.replace("_", " ")}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <span
-                        style={{
-                          textTransform: "capitalize",
-                          color:
+        </CardHeader>
+        <CardContent>
+          {loadingMembers ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">Loading team…</div>
+          ) : members.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">No members found.</div>
+          ) : (
+            <div className="rounded-md border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Member</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    {canRevokeMember && <TableHead className="text-right">Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {members.map((member) => (
+                    <TableRow key={member.id} className="hover:bg-muted/40 transition-colors">
+                      <TableCell className="font-semibold text-foreground">
+                        {member.displayName}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{member.email}</TableCell>
+                      <TableCell>
+                        {canModifyRole ? (
+                          <Select
+                            value={member.roleKey}
+                            onValueChange={(val) =>
+                              void handleRoleChange(member.id, val as RoleKey)
+                            }
+                          >
+                            <SelectTrigger
+                              className="h-8 w-36 text-xs cursor-pointer"
+                              aria-label={`Change role for ${member.displayName}`}
+                            >
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="owner">Owner</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="supervisor">Supervisor</SelectItem>
+                              <SelectItem value="agent">Agent</SelectItem>
+                              <SelectItem value="analyst">Analyst</SelectItem>
+                              <SelectItem value="billing_admin">Billing Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge
+                            variant={getRoleBadgeVariant(member.roleKey)}
+                            className="capitalize font-mono text-xs"
+                          >
+                            {member.roleKey.replace("_", " ")}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={member.status === "active" ? "secondary" : "outline"}
+                          className={`capitalize text-xs ${
                             member.status === "active"
-                              ? "var(--color-success)"
-                              : "var(--color-warning)"
-                        }}
-                      >
-                        {member.status}
-                      </span>
-                    </td>
-                    {canRevokeMember && (
-                      <td>
-                        <button
-                          type="button"
-                          onClick={() => void handleRevoke(member.id, member.displayName)}
-                          className="btn btn-danger btn-sm"
-                          aria-label={`Remove ${member.displayName}`}
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200"
+                              : "text-muted-foreground"
+                          }`}
                         >
-                          Remove
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {showInviteModal && (
-        <div className="modal-backdrop" role="dialog" aria-modal="true">
-          <div className="glass-card modal-content">
-            <div className="modal-header">
-              <h3 className="modal-title">Invite Team Member</h3>
-              <button
-                type="button"
-                onClick={() => setShowInviteModal(false)}
-                className="btn btn-secondary btn-sm"
-              >
-                ✕
-              </button>
+                          {member.status}
+                        </Badge>
+                      </TableCell>
+                      {canRevokeMember && (
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => void handleRevoke(member.id, member.displayName)}
+                            className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                            aria-label={`Remove ${member.displayName}`}
+                          >
+                            <UserX className="mr-1 size-3.5" />
+                            Remove
+                          </Button>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-            <form onSubmit={(e) => void handleInviteSubmit(e)}>
-              <div className="form-group">
-                <label className="form-label" htmlFor={inviteEmailId}>
-                  Email Address
-                </label>
-                <input
-                  id={inviteEmailId}
-                  type="email"
-                  required
-                  placeholder="colleague@example.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="form-input"
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor={inviteRoleId}>
-                  Role
-                </label>
-                <select
-                  id={inviteRoleId}
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as RoleKey)}
-                  className="form-select"
-                >
-                  <option value="owner">Owner</option>
-                  <option value="admin">Admin</option>
-                  <option value="supervisor">Supervisor</option>
-                  <option value="agent">Agent</option>
-                  <option value="analyst">Analyst</option>
-                  <option value="billing_admin">Billing Admin</option>
-                </select>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "0.5rem",
-                  justifyContent: "flex-end",
-                  marginTop: "1.5rem"
-                }}
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Invite Member Dialog */}
+      <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogDescription>
+              Send an invitation to a colleague to collaborate in {activeOrg?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => void handleInviteSubmit(e)} className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor={inviteEmailId}>Email Address</Label>
+              <Input
+                id={inviteEmailId}
+                type="email"
+                required
+                placeholder="colleague@example.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={inviteRoleId}>Role</Label>
+              <Select value={inviteRole} onValueChange={(val) => setInviteRole(val as RoleKey)}>
+                <SelectTrigger id={inviteRoleId} className="w-full cursor-pointer">
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="analyst">Analyst</SelectItem>
+                  <SelectItem value="billing_admin">Billing Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowInviteModal(false)}
+                className="cursor-pointer"
               >
-                <button
-                  type="button"
-                  onClick={() => setShowInviteModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={inviting}
-                  className="btn btn-primary"
-                  id="send-invitation-btn"
-                >
-                  {inviting ? "Sending…" : "Send Invitation"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={inviting}
+                id="send-invitation-btn"
+                className="cursor-pointer"
+              >
+                {inviting ? "Sending…" : "Send Invitation"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

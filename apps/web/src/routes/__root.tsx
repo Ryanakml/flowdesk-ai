@@ -7,6 +7,9 @@ import { LoginView } from "../features/auth/LoginView.js";
 import { OnboardingView } from "../features/onboarding/OnboardingView.js";
 import { InvitationView } from "../features/invitations/InvitationView.js";
 
+import { Card } from "../components/ui/card.js";
+import { AlertCircle, FileQuestion, RefreshCw } from "lucide-react";
+
 export const Route = createRootRoute({
   component: RootComponent,
   notFoundComponent: RootNotFoundComponent,
@@ -15,17 +18,24 @@ export const Route = createRootRoute({
 
 function RootNotFoundComponent() {
   return (
-    <div
-      className="glass-card"
-      style={{ padding: "3rem", textAlign: "center", maxWidth: 500, margin: "4rem auto" }}
-    >
-      <h2 className="section-title">404 — Page Not Found</h2>
-      <p className="section-subtitle" style={{ margin: "1rem 0 2rem" }}>
-        The page you requested could not be found or has moved.
-      </p>
-      <Link to="/inbox" className="btn btn-primary">
-        Return to Inbox
-      </Link>
+    <div className="mx-auto flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+      <Card className="max-w-md border-border p-8 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-muted">
+          <FileQuestion className="size-7 text-muted-foreground" />
+        </div>
+        <h2 className="text-3xl font-bold tracking-tight text-foreground mb-1">
+          404 — Page Not Found
+        </h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          The page you requested could not be found or has been moved to another location.
+        </p>
+        <Link
+          to="/inbox"
+          className="btn btn-primary inline-flex items-center justify-center w-full cursor-pointer"
+        >
+          Return to Inbox
+        </Link>
+      </Card>
     </div>
   );
 }
@@ -35,17 +45,34 @@ function RootErrorComponent({ error }: { error: unknown }) {
     console.error("Router error:", error);
   }
   return (
-    <div
-      className="glass-card"
-      style={{ padding: "3rem", textAlign: "center", maxWidth: 500, margin: "4rem auto" }}
-    >
-      <h2 className="section-title">An unexpected error occurred</h2>
-      <p className="section-subtitle" style={{ margin: "1rem 0 2rem" }}>
-        A client application error occurred. Please reload or return to the inbox.
-      </p>
-      <button type="button" onClick={() => window.location.reload()} className="btn btn-primary">
-        Reload Application
-      </button>
+    <div className="mx-auto flex min-h-[70vh] flex-col items-center justify-center p-6 text-center">
+      <Card className="max-w-md border-destructive/30 bg-destructive/5 p-8 text-center shadow-lg">
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+          <AlertCircle className="size-7" />
+        </div>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground mb-1">
+          An unexpected error occurred
+        </h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          A client application error occurred. Please reload or return to the inbox.
+        </p>
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="btn btn-primary inline-flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className="size-4" />
+            Reload Application
+          </button>
+          <Link
+            to="/inbox"
+            className="btn btn-secondary inline-flex items-center justify-center cursor-pointer"
+          >
+            Return to Inbox
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }

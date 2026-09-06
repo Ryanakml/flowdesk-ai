@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+import { Button } from "@flowdesk/ui";
 import {
   type AnalyticsMetricsClientResponse,
   exportAnalyticsReportApi,
   getAnalyticsMetricsApi
 } from "./api.js";
+import { SectionCards } from "./features/analytics/components/section-cards.js";
+import { ChartAreaInteractive } from "./features/analytics/components/chart-area-interactive.js";
 
 export interface AnalyticsViewProps {
   orgId: string;
@@ -64,7 +68,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
 
   if (loading && !data) {
     return (
-      <div style={{ padding: 24, textAlign: "center", color: "#64748b" }}>
+      <div className="p-8 text-center text-muted-foreground">
         <p>Loading real-time analytics data...</p>
       </div>
     );
@@ -72,18 +76,9 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
 
   if (error && !data) {
     return (
-      <div
-        style={{
-          padding: 24,
-          margin: 24,
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
-          borderRadius: 8,
-          color: "#991b1b"
-        }}
-      >
-        <h3 style={{ margin: "0 0 8px 0" }}>Analytics Unavailable</h3>
-        <p style={{ margin: 0 }}>{error}</p>
+      <div className="m-6 rounded-lg border border-destructive/20 bg-destructive/10 p-6 text-destructive">
+        <h3 className="mb-2 font-semibold">Analytics Unavailable</h3>
+        <p className="text-sm">{error}</p>
       </div>
     );
   }
@@ -107,228 +102,95 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
   const volumeSeries = data?.volumeSeries ?? [];
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: "0 auto" }}>
+    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          flexWrap: "wrap",
-          gap: 16
-        }}
-      >
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 700, color: "#0f172a" }}>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">
             Real-Time Analytics & SLA Engine
           </h2>
-          <p style={{ margin: "4px 0 0 0", color: "#64748b", fontSize: 14 }}>
+          <p className="text-sm text-muted-foreground mt-1">
             Monitor operational conversation throughput, bot automation efficiency, and SLA
             compliance metrics.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(Number(e.target.value))}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 6,
-              border: "1px solid #cbd5e1",
-              background: "#ffffff",
-              fontSize: 14,
-              cursor: "pointer"
-            }}
-          >
-            <option value={7}>Last 7 Days</option>
-            <option value={14}>Last 14 Days</option>
-            <option value={30}>Last 30 Days</option>
-          </select>
-
-          <button
+        <div className="flex items-center gap-3">
+          <Button
+            variant="default"
+            size="sm"
             onClick={() => {
               void handleExportCSV();
             }}
             disabled={exporting}
-            style={{
-              padding: "8px 16px",
-              background: "#2563eb",
-              color: "#ffffff",
-              border: "none",
-              borderRadius: 6,
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: exporting ? "not-allowed" : "pointer",
-              opacity: exporting ? 0.7 : 1,
-              display: "flex",
-              alignItems: "center",
-              gap: 8
-            }}
+            className="cursor-pointer"
           >
+            <Download className="mr-2 size-4" />
             {exporting ? "Generating CSV..." : "📥 Export Compliance CSV"}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-          gap: 16,
-          marginBottom: 32
-        }}
-      >
-        {/* Total Conversations */}
-        <div
-          style={{
-            background: "#ffffff",
-            padding: 20,
-            borderRadius: 12,
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-          }}
-        >
-          <div style={{ fontSize: 13, color: "#64748b", fontWeight: 600 }}>TOTAL CONVERSATIONS</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#0f172a", marginTop: 8 }}>
-            {overview.totalConversations}
-          </div>
-          <div style={{ fontSize: 12, color: "#16a34a", marginTop: 4 }}>
-            {overview.resolvedConversations} resolved ({overview.openConversations} active)
-          </div>
-        </div>
+      {/* KPI Cards transplanted from donor section cards */}
+      <SectionCards overview={overview} />
 
-        {/* Bot Automation Rate */}
-        <div
-          style={{
-            background: "#ffffff",
-            padding: 20,
-            borderRadius: 12,
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-          }}
-        >
-          <div style={{ fontSize: 13, color: "#64748b", fontWeight: 600 }}>BOT AUTOMATION RATE</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#2563eb", marginTop: 8 }}>
-            {overview.botAutomationRate}%
-          </div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            {overview.botMessages} bot responses auto-dispatched
-          </div>
-        </div>
+      {/* Interactive area chart transplanted from donor dashboard */}
+      <ChartAreaInteractive
+        volumeSeries={volumeSeries}
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+      />
 
-        {/* SLA Compliance Rate */}
-        <div
-          style={{
-            background: "#ffffff",
-            padding: 20,
-            borderRadius: 12,
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-          }}
-        >
-          <div style={{ fontSize: 13, color: "#64748b", fontWeight: 600 }}>SLA COMPLIANCE</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#16a34a", marginTop: 8 }}>
-            {overview.slaMetPercentage}%
-          </div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            Avg response: {overview.avgFirstResponseTimeSeconds}s
-          </div>
-        </div>
+      {/* Daily Volume & Breakdown Table */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+        <h3 className="mb-4 text-base font-semibold text-foreground">
+          Daily Message Volume & Automation Breakdown
+        </h3>
 
-        {/* Avg Resolution Speed */}
-        <div
-          style={{
-            background: "#ffffff",
-            padding: 20,
-            borderRadius: 12,
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-          }}
-        >
-          <div style={{ fontSize: 13, color: "#64748b", fontWeight: 600 }}>AVG RESOLUTION TIME</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#0f172a", marginTop: 8 }}>
-            {Math.round(overview.avgResolutionTimeSeconds / 60)}m
+        {volumeSeries.length === 0 ? (
+          <p className="text-sm text-muted-foreground italic">
+            No message activity recorded for the selected date range.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-border text-xs font-semibold uppercase text-muted-foreground">
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Inbound Messages</th>
+                  <th className="px-4 py-3">Outbound Messages</th>
+                  <th className="px-4 py-3">Bot Handled</th>
+                  <th className="px-4 py-3">Automation Share</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {volumeSeries.map((pt) => {
+                  const dayTotal = pt.inbound + pt.outbound;
+                  const share = dayTotal > 0 ? Math.round((pt.bot / dayTotal) * 100) : 0;
+                  return (
+                    <tr key={pt.date} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground">{pt.date}</td>
+                      <td className="px-4 py-3 text-blue-600 dark:text-blue-400 font-mono">
+                        {pt.inbound}
+                      </td>
+                      <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-mono">
+                        {pt.outbound}
+                      </td>
+                      <td className="px-4 py-3 text-purple-600 dark:text-purple-400 font-mono">
+                        {pt.bot}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">
+                          {share}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>
-            {overview.humanMessages} human agent responses
-          </div>
-        </div>
-      </div>
-
-      {/* Volume Breakdown & Daily Trends */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
-        <div
-          style={{
-            background: "#ffffff",
-            padding: 24,
-            borderRadius: 12,
-            border: "1px solid #e2e8f0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-          }}
-        >
-          <h3 style={{ margin: "0 0 16px 0", fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
-            Daily Message Volume & Automation Breakdown
-          </h3>
-
-          {volumeSeries.length === 0 ? (
-            <p style={{ color: "#64748b", fontStyle: "italic", margin: 0 }}>
-              No message activity recorded for the selected date range.
-            </p>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: 14,
-                  textAlign: "left"
-                }}
-              >
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #e2e8f0", color: "#64748b" }}>
-                    <th style={{ padding: "10px 12px" }}>Date</th>
-                    <th style={{ padding: "10px 12px" }}>Inbound Messages</th>
-                    <th style={{ padding: "10px 12px" }}>Outbound Messages</th>
-                    <th style={{ padding: "10px 12px" }}>Bot Handled</th>
-                    <th style={{ padding: "10px 12px" }}>Automation Share</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {volumeSeries.map((pt) => {
-                    const dayTotal = pt.inbound + pt.outbound;
-                    const share = dayTotal > 0 ? Math.round((pt.bot / dayTotal) * 100) : 0;
-                    return (
-                      <tr key={pt.date} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "12px", fontWeight: 600, color: "#0f172a" }}>
-                          {pt.date}
-                        </td>
-                        <td style={{ padding: "12px", color: "#2563eb" }}>{pt.inbound}</td>
-                        <td style={{ padding: "12px", color: "#16a34a" }}>{pt.outbound}</td>
-                        <td style={{ padding: "12px", color: "#9333ea" }}>{pt.bot}</td>
-                        <td style={{ padding: "12px", color: "#64748b" }}>
-                          <span
-                            style={{
-                              padding: "2px 8px",
-                              borderRadius: 12,
-                              background: "#f1f5f9",
-                              fontSize: 12,
-                              fontWeight: 600
-                            }}
-                          >
-                            {share}%
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

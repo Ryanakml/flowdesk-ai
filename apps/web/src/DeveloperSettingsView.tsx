@@ -13,6 +13,9 @@ import {
   revokeApiKeyApi,
   testWebhookApi
 } from "./api.js";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card.js";
+import { Badge } from "@flowdesk/ui";
+import { Code, Key, Webhook, Copy } from "lucide-react";
 
 export interface DeveloperSettingsViewProps {
   orgId: string;
@@ -267,103 +270,135 @@ export function DeveloperSettingsView({
   };
 
   return (
-    <div className="developer-settings-container p-6" data-testid="developer-settings-view">
-      <div className="flex justify-between items-center mb-6">
+    <div
+      className="developer-settings-container mx-auto max-w-6xl space-y-6 p-4 md:p-8"
+      data-testid="developer-settings-view"
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Developer Integrations</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Code className="size-6 text-primary" />
+            Developer Integrations
+          </h2>
+          <p className="text-sm text-muted-foreground">
             Manage scoped API keys and outbound webhook subscriptions for programmatic integrations.
           </p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
-            className={`btn ${activeTab === "keys" ? "btn-primary" : "btn-secondary"}`}
+            className={`btn ${activeTab === "keys" ? "btn-primary" : "btn-secondary"} cursor-pointer inline-flex items-center gap-1.5`}
             onClick={() => {
               setActiveTab("keys");
               onTabChange?.("keys");
             }}
           >
+            <Key className="size-4" />
             API Keys
           </button>
           <button
             type="button"
-            className={`btn ${activeTab === "webhooks" ? "btn-primary" : "btn-secondary"}`}
+            className={`btn ${activeTab === "webhooks" ? "btn-primary" : "btn-secondary"} cursor-pointer inline-flex items-center gap-1.5`}
             onClick={() => {
               setActiveTab("webhooks");
               onTabChange?.("webhooks");
             }}
           >
+            <Webhook className="size-4" />
             Webhooks
           </button>
         </div>
       </div>
 
       {generatedRawKey && (
-        <div className="card p-4 mb-6 bg-amber-50 border-amber-300 rounded-lg text-amber-900">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-md">Save Your New Secret API Key</h3>
-            <button type="button" onClick={() => setGeneratedRawKey(null)}>
-              Close ✕
-            </button>
-          </div>
-          <p className="text-xs mb-2">Copy this key now. It will never be displayed again.</p>
-          <div className="flex items-center gap-2">
-            <code className="p-2 bg-white border rounded font-mono text-sm break-all flex-1">
-              {generatedRawKey}
-            </code>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => {
-                void navigator.clipboard.writeText(generatedRawKey);
-                showToast?.("Copied to clipboard!", "info");
-              }}
-            >
-              Copy
-            </button>
-          </div>
-        </div>
+        <Card className="border-amber-400 bg-amber-50/70 text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-start">
+              <CardTitle className="text-base font-semibold">
+                Save Your New Secret API Key
+              </CardTitle>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground text-sm cursor-pointer"
+                onClick={() => setGeneratedRawKey(null)}
+              >
+                Close ✕
+              </button>
+            </div>
+            <CardDescription className="text-xs text-amber-800 dark:text-amber-300">
+              Copy this key now. It will never be displayed again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <code className="p-2.5 bg-background border rounded-md font-mono text-xs break-all flex-1 text-foreground shadow-xs">
+                {generatedRawKey}
+              </code>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm inline-flex items-center gap-1 cursor-pointer"
+                onClick={() => {
+                  void navigator.clipboard.writeText(generatedRawKey);
+                  showToast?.("Copied to clipboard!", "info");
+                }}
+              >
+                <Copy className="size-3.5" />
+                Copy
+              </button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {generatedWebhookSecret && (
-        <div className="card p-4 mb-6 bg-amber-50 border-amber-300 rounded-lg text-amber-900">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-md">Save Your Webhook Signing Secret</h3>
-            <button type="button" onClick={() => setGeneratedWebhookSecret(null)}>
-              Close ✕
-            </button>
-          </div>
-          <p className="text-xs mb-2">
-            Signing secret for {generatedWebhookSecret.name}. Copy it now; FlowDesk will only show
-            the masked value later.
-          </p>
-          <div className="flex items-center gap-2">
-            <code className="p-2 bg-white border rounded font-mono text-sm break-all flex-1">
-              {generatedWebhookSecret.secret}
-            </code>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={() => {
-                void navigator.clipboard.writeText(generatedWebhookSecret.secret);
-                showToast?.("Webhook signing secret copied", "info");
-              }}
-            >
-              Copy
-            </button>
-          </div>
-        </div>
+        <Card className="border-amber-400 bg-amber-50/70 text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200">
+          <CardHeader className="pb-2">
+            <div className="flex justify-between items-start">
+              <CardTitle className="text-base font-semibold">
+                Save Your Webhook Signing Secret
+              </CardTitle>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground text-sm cursor-pointer"
+                onClick={() => setGeneratedWebhookSecret(null)}
+              >
+                Close ✕
+              </button>
+            </div>
+            <CardDescription className="text-xs text-amber-800 dark:text-amber-300">
+              Signing secret for {generatedWebhookSecret.name}. Copy it now; FlowDesk will only show
+              the masked value later.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <code className="p-2.5 bg-background border rounded-md font-mono text-xs break-all flex-1 text-foreground shadow-xs">
+                {generatedWebhookSecret.secret}
+              </code>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm inline-flex items-center gap-1 cursor-pointer"
+                onClick={() => {
+                  void navigator.clipboard.writeText(generatedWebhookSecret.secret);
+                  showToast?.("Webhook signing secret copied", "info");
+                }}
+              >
+                <Copy className="size-3.5" />
+                Copy
+              </button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {activeTab === "keys" && (
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Scoped API Keys</h3>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-foreground">Scoped API Keys</h3>
             {canManage && (
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm inline-flex items-center gap-1 cursor-pointer"
                 onClick={() => setShowKeyModal(true)}
               >
                 + Generate New API Key
@@ -372,62 +407,70 @@ export function DeveloperSettingsView({
           </div>
 
           {loadingKeys ? (
-            <p className="text-sm text-gray-500">Loading API keys...</p>
+            <Card className="p-8 text-center text-muted-foreground">Loading API keys...</Card>
           ) : keys.length === 0 ? (
-            <div className="card p-8 text-center text-gray-500 border border-dashed rounded-lg">
-              <p className="mb-4">No API keys created yet.</p>
+            <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
+              <div className="rounded-full bg-muted p-3 mb-3">
+                <Key className="size-6 text-muted-foreground" />
+              </div>
+              <CardTitle className="text-base mb-1">No API keys created yet.</CardTitle>
+              <CardDescription className="mb-4">
+                Generate API keys to grant external services programmatic access to your FlowDesk
+                workspace.
+              </CardDescription>
               {canManage && (
                 <button
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm cursor-pointer"
                   onClick={() => setShowKeyModal(true)}
                 >
                   Create your first API key
                 </button>
               )}
-            </div>
+            </Card>
           ) : (
             <div className="space-y-3">
               {keys.map((key) => (
-                <div
-                  key={key.id}
-                  className="card p-4 border rounded-lg shadow-sm bg-white flex justify-between items-center"
-                >
+                <Card key={key.id} className="border-border p-4 flex justify-between items-center">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-gray-900">{key.name}</h4>
-                      <span
-                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                          key.revokedAt ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"
-                        }`}
+                      <h4 className="font-semibold text-foreground">{key.name}</h4>
+                      <Badge
+                        variant={key.revokedAt ? "destructive" : "default"}
+                        className={
+                          key.revokedAt
+                            ? "bg-destructive/15 text-destructive border-destructive/20"
+                            : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                        }
                       >
                         {key.revokedAt ? "REVOKED" : "ACTIVE"}
-                      </span>
+                      </Badge>
                     </div>
-                    <p className="text-xs text-gray-600 font-mono mb-1">
+                    <p className="text-xs text-muted-foreground font-mono mb-2">
                       Prefix: {key.keyPrefix}••••••••
                     </p>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5 flex-wrap">
                       {key.scopes.map((scope) => (
-                        <span
+                        <Badge
                           key={scope}
-                          className="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
+                          variant="outline"
+                          className="text-xs font-mono bg-muted/50"
                         >
                           {scope}
-                        </span>
+                        </Badge>
                       ))}
                     </div>
                   </div>
                   {canManage && !key.revokedAt && (
                     <button
                       type="button"
-                      className="btn btn-danger btn-sm text-red-600 hover:text-red-800"
+                      className="btn btn-danger btn-sm text-destructive hover:bg-destructive/10 cursor-pointer"
                       onClick={() => void handleRevokeKey(key.id)}
                     >
                       Revoke Key
                     </button>
                   )}
-                </div>
+                </Card>
               ))}
             </div>
           )}
@@ -435,13 +478,15 @@ export function DeveloperSettingsView({
       )}
 
       {activeTab === "webhooks" && (
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Outbound Webhook Subscriptions</h3>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold text-foreground">
+              Outbound Webhook Subscriptions
+            </h3>
             {canManage && (
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm inline-flex items-center gap-1 cursor-pointer"
                 onClick={() => setShowWebhookModal(true)}
               >
                 + Register Webhook
@@ -450,20 +495,29 @@ export function DeveloperSettingsView({
           </div>
 
           {loadingWebhooks ? (
-            <p className="text-sm text-gray-500">Loading webhooks...</p>
+            <Card className="p-8 text-center text-muted-foreground">Loading webhooks...</Card>
           ) : webhooks.length === 0 ? (
-            <div className="card p-8 text-center text-gray-500 border border-dashed rounded-lg">
-              <p className="mb-4">No outbound webhook subscriptions registered yet.</p>
+            <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
+              <div className="rounded-full bg-muted p-3 mb-3">
+                <Webhook className="size-6 text-muted-foreground" />
+              </div>
+              <CardTitle className="text-base mb-1">
+                No outbound webhook subscriptions registered yet.
+              </CardTitle>
+              <CardDescription className="mb-4">
+                Receive instant HTTP POST callbacks when messages or conversations are created in
+                FlowDesk.
+              </CardDescription>
               {canManage && (
                 <button
                   type="button"
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-secondary btn-sm cursor-pointer"
                   onClick={() => setShowWebhookModal(true)}
                 >
                   Register your first webhook
                 </button>
               )}
-            </div>
+            </Card>
           ) : (
             <div className="space-y-3">
               {webhooks.map((webhook) => {
@@ -471,11 +525,11 @@ export function DeveloperSettingsView({
                 const deliveries = deliveriesByWebhook[webhook.id] ?? [];
                 const expanded = expandedWebhookId === webhook.id;
                 return (
-                  <div key={webhook.id} className="card p-4 border rounded-lg shadow-sm bg-white">
+                  <Card key={webhook.id} className="border-border p-4">
                     <div className="flex justify-between items-start gap-4">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-gray-900">{webhook.name}</h4>
+                          <h4 className="font-semibold text-foreground">{webhook.name}</h4>
                           <span
                             className={`px-2 py-0.5 text-xs font-medium rounded-full ${verificationBadgeClass(
                               verificationStatus
@@ -484,18 +538,24 @@ export function DeveloperSettingsView({
                             {verificationStatus.toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 font-mono mb-1">{webhook.url}</p>
-                        <p className="text-xs text-gray-500 mb-1">
-                          Secret: <code className="font-mono">{webhook.secret}</code>
+                        <p className="text-xs text-muted-foreground font-mono mb-1">
+                          {webhook.url}
                         </p>
-                        <div className="flex gap-1 flex-wrap">
+                        <p className="text-xs text-muted-foreground mb-2">
+                          Secret:{" "}
+                          <code className="font-mono bg-muted px-1.5 py-0.5 rounded">
+                            {webhook.secret}
+                          </code>
+                        </p>
+                        <div className="flex gap-1.5 flex-wrap">
                           {webhook.events.map((eventName) => (
-                            <span
+                            <Badge
                               key={eventName}
-                              className="px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded"
+                              variant="outline"
+                              className="text-xs font-mono bg-primary/5 text-primary border-primary/20"
                             >
                               {eventName}
-                            </span>
+                            </Badge>
                           ))}
                         </div>
                       </div>
@@ -503,7 +563,7 @@ export function DeveloperSettingsView({
                         {canManage && (
                           <button
                             type="button"
-                            className="btn btn-secondary btn-sm"
+                            className="btn btn-secondary btn-sm cursor-pointer"
                             disabled={testingWebhookId === webhook.id}
                             onClick={() => void handleTestWebhook(webhook.id)}
                           >
@@ -512,7 +572,7 @@ export function DeveloperSettingsView({
                         )}
                         <button
                           type="button"
-                          className="btn btn-secondary btn-sm"
+                          className="btn btn-secondary btn-sm cursor-pointer"
                           onClick={() => void handleToggleDeliveries(webhook.id)}
                         >
                           {expanded ? "Hide Deliveries" : "View Deliveries"}
@@ -520,7 +580,7 @@ export function DeveloperSettingsView({
                         {canManage && (
                           <button
                             type="button"
-                            className="btn btn-danger btn-sm text-red-600 hover:text-red-800"
+                            className="btn btn-danger btn-sm text-destructive hover:bg-destructive/10 cursor-pointer"
                             onClick={() => void handleDeleteWebhook(webhook.id)}
                           >
                             Delete
@@ -534,27 +594,31 @@ export function DeveloperSettingsView({
                         className="mt-4 border-t pt-3"
                         data-testid={`webhook-deliveries-${webhook.id}`}
                       >
-                        <h5 className="text-sm font-semibold text-gray-800 mb-2">
+                        <h5 className="text-sm font-semibold text-foreground mb-2">
                           Delivery History
                         </h5>
                         {loadingDeliveriesWebhookId === webhook.id ? (
-                          <p className="text-xs text-gray-500">Loading deliveries...</p>
+                          <p className="text-xs text-muted-foreground">Loading deliveries...</p>
                         ) : deliveries.length === 0 ? (
-                          <p className="text-xs text-gray-500">No delivery attempts yet.</p>
+                          <p className="text-xs text-muted-foreground">No delivery attempts yet.</p>
                         ) : (
                           <div className="space-y-2">
                             {deliveries.map((delivery) => (
                               <div
                                 key={delivery.id}
-                                className="flex justify-between gap-4 text-xs border rounded p-2"
+                                className="flex justify-between gap-4 text-xs border border-border rounded p-2.5 bg-muted/20"
                               >
                                 <div>
-                                  <div className="font-mono text-gray-800">
+                                  <div className="font-mono font-medium text-foreground">
                                     {delivery.eventType}
                                   </div>
-                                  <div className="text-gray-500">{delivery.eventId}</div>
+                                  <div className="text-muted-foreground font-mono">
+                                    {delivery.eventId}
+                                  </div>
                                   {delivery.lastError && (
-                                    <div className="text-red-600">{delivery.lastError}</div>
+                                    <div className="text-destructive font-mono mt-0.5">
+                                      {delivery.lastError}
+                                    </div>
                                   )}
                                 </div>
                                 <div className="text-right">
@@ -565,7 +629,7 @@ export function DeveloperSettingsView({
                                   >
                                     {delivery.status}
                                   </span>
-                                  <div className="mt-1 text-gray-500">
+                                  <div className="mt-1 text-muted-foreground">
                                     HTTP {delivery.responseStatusCode ?? "—"} · attempts{" "}
                                     {delivery.attemptCount}/{delivery.maxAttempts}
                                   </div>
@@ -576,7 +640,7 @@ export function DeveloperSettingsView({
                         )}
                       </div>
                     )}
-                  </div>
+                  </Card>
                 );
               })}
             </div>
@@ -585,28 +649,28 @@ export function DeveloperSettingsView({
       )}
 
       {showKeyModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Generate Developer API Key</h3>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-card text-card-foreground rounded-lg p-6 max-w-md w-full shadow-xl border border-border">
+            <h3 className="text-lg font-bold text-foreground mb-4">Generate Developer API Key</h3>
             <form onSubmit={(event) => void handleCreateKey(event)}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Key Name</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Key Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Production Automation Bot"
-                  className="w-full p-2 border rounded text-sm"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   value={keyName}
                   onChange={(event) => setKeyName(event.target.value)}
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Permissions / Scopes
                 </label>
                 <div className="space-y-1 text-sm">
                   {CANONICAL_KEY_SCOPES.map((scope) => (
-                    <label key={scope} className="flex items-center gap-2">
+                    <label key={scope} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={keyScopes.includes(scope)}
@@ -615,7 +679,7 @@ export function DeveloperSettingsView({
                       <span>{scope}</span>
                     </label>
                   ))}
-                  <label className="flex items-center gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={keyScopes.includes("admin")}
@@ -625,15 +689,19 @@ export function DeveloperSettingsView({
                   </label>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 border-t pt-4">
+              <div className="flex justify-end gap-2 border-t border-border pt-4">
                 <button
                   type="button"
-                  className="btn btn-secondary text-sm"
+                  className="btn btn-secondary text-sm cursor-pointer"
                   onClick={() => setShowKeyModal(false)}
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting} className="btn btn-primary text-sm">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary text-sm cursor-pointer"
+                >
                   {submitting ? "Generating..." : "Generate Key"}
                 </button>
               </div>
@@ -643,39 +711,41 @@ export function DeveloperSettingsView({
       )}
 
       {showWebhookModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Register Outbound Webhook</h3>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-card text-card-foreground rounded-lg p-6 max-w-md w-full shadow-xl border border-border">
+            <h3 className="text-lg font-bold text-foreground mb-4">Register Outbound Webhook</h3>
             <form onSubmit={(event) => void handleCreateWebhook(event)}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-foreground mb-1">Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. CRM Sync Handler"
-                  className="w-full p-2 border rounded text-sm"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   value={webhookName}
                   onChange={(event) => setWebhookName(event.target.value)}
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Payload URL</label>
+                <label className="block text-sm font-medium text-foreground mb-1">
+                  Payload URL
+                </label>
                 <input
                   type="url"
                   required
                   placeholder="https://your-domain.com/webhooks/flowdesk"
-                  className="w-full p-2 border rounded text-sm"
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                   value={webhookUrl}
                   onChange={(event) => setWebhookUrl(event.target.value)}
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   Subscribed Events
                 </label>
                 <div className="space-y-1 text-sm">
                   {["conversation.created", "message.received", "message.sent"].map((eventName) => (
-                    <label key={eventName} className="flex items-center gap-2">
+                    <label key={eventName} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={webhookEvents.includes(eventName)}
@@ -686,15 +756,19 @@ export function DeveloperSettingsView({
                   ))}
                 </div>
               </div>
-              <div className="flex justify-end gap-2 border-t pt-4">
+              <div className="flex justify-end gap-2 border-t border-border pt-4">
                 <button
                   type="button"
-                  className="btn btn-secondary text-sm"
+                  className="btn btn-secondary text-sm cursor-pointer"
                   onClick={() => setShowWebhookModal(false)}
                 >
                   Cancel
                 </button>
-                <button type="submit" disabled={submitting} className="btn btn-primary text-sm">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="btn btn-primary text-sm cursor-pointer"
+                >
                   {submitting ? "Registering..." : "Register Webhook"}
                 </button>
               </div>

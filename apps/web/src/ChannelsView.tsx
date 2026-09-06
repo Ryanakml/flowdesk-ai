@@ -8,6 +8,16 @@ import {
   verifyChannelApi,
   type ChannelClientRecord
 } from "./api.js";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "./components/ui/card.js";
+import { Badge } from "@flowdesk/ui";
+import { MessageSquare, Plus, Zap } from "lucide-react";
 
 interface FacebookSdk {
   init(config: { appId: string; cookie: boolean; xfbml: boolean; version: string }): void;
@@ -266,11 +276,17 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
   };
 
   return (
-    <div className="channels-container p-6" data-testid="channels-view">
-      <div className="flex justify-between items-center mb-6">
+    <div
+      className="channels-container mx-auto max-w-6xl space-y-6 p-4 md:p-8"
+      data-testid="channels-view"
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">WhatsApp Channels</h2>
-          <p className="text-sm text-gray-500">
+          <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <MessageSquare className="size-6 text-primary" />
+            WhatsApp Channels
+          </h2>
+          <p className="text-sm text-muted-foreground">
             Connect with a Meta access token and FlowDesk will verify the phone number, subscribe
             the WABA, and encrypt the credential before activating the channel.
           </p>
@@ -280,18 +296,20 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
             <button
               type="button"
               onClick={() => openManualConnect()}
-              className="btn btn-primary"
+              className="btn btn-primary inline-flex items-center gap-1.5 cursor-pointer"
               id="connect-channel-btn"
               disabled={connecting}
             >
+              <Plus className="size-4" />
               Connect WhatsApp
             </button>
             <button
               type="button"
               onClick={() => void handleConnect()}
-              className="btn btn-secondary"
+              className="btn btn-secondary inline-flex items-center gap-1.5 cursor-pointer"
               disabled={connecting}
             >
+              <Zap className="size-4" />
               Connect with Meta Signup
             </button>
           </div>
@@ -299,140 +317,176 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
       </div>
 
       {canManage && showManualConnect && (
-        <form
-          onSubmit={(event) => void handleManualConnect(event)}
-          className="card mb-6 grid gap-4 border rounded-lg bg-white p-5 md:grid-cols-2"
-          aria-label="Connect WhatsApp with access token"
-        >
-          <div className="md:col-span-2">
-            <h3 className="font-semibold text-gray-900">Connect with verified credentials</h3>
-            <p className="text-sm text-gray-500">
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              Connect with verified credentials
+            </CardTitle>
+            <CardDescription>
               Use credentials from the same Meta App configured for the FlowDesk webhook. The access
               token is never returned by the API.
-            </p>
-          </div>
-          <label className="text-sm font-medium text-gray-700">
-            Channel name
-            <input
-              required
-              maxLength={100}
-              className="mt-1 block w-full rounded border p-2"
-              value={manualConnection.name}
-              onChange={(event) =>
-                setManualConnection((current) => ({ ...current, name: event.target.value }))
-              }
-            />
-          </label>
-          <label className="text-sm font-medium text-gray-700">
-            Phone Number ID
-            <input
-              required
-              className="mt-1 block w-full rounded border p-2"
-              value={manualConnection.phoneNumberId}
-              onChange={(event) =>
-                setManualConnection((current) => ({
-                  ...current,
-                  phoneNumberId: event.target.value
-                }))
-              }
-            />
-          </label>
-          <label className="text-sm font-medium text-gray-700">
-            WABA ID
-            <input
-              required
-              className="mt-1 block w-full rounded border p-2"
-              value={manualConnection.wabaId}
-              onChange={(event) =>
-                setManualConnection((current) => ({ ...current, wabaId: event.target.value }))
-              }
-            />
-          </label>
-          <label className="text-sm font-medium text-gray-700">
-            Access token
-            <input
-              required
-              type="password"
-              autoComplete="off"
-              className="mt-1 block w-full rounded border p-2"
-              value={manualConnection.accessToken}
-              onChange={(event) =>
-                setManualConnection((current) => ({
-                  ...current,
-                  accessToken: event.target.value
-                }))
-              }
-            />
-          </label>
-          <div className="flex gap-2 md:col-span-2">
-            <button type="submit" className="btn btn-primary" disabled={connecting}>
-              {connecting ? "Verifying and connecting..." : "Verify and connect"}
-            </button>
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setShowManualConnect(false)}
-              disabled={connecting}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(event) => void handleManualConnect(event)}
+              className="card grid gap-4 md:grid-cols-2"
+              aria-label="Connect WhatsApp with access token"
             >
-              Cancel
-            </button>
-          </div>
-        </form>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  Channel name
+                  <input
+                    required
+                    maxLength={100}
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.name}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({ ...current, name: event.target.value }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  Phone Number ID
+                  <input
+                    required
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.phoneNumberId}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({
+                        ...current,
+                        phoneNumberId: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  WABA ID
+                  <input
+                    required
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.wabaId}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({ ...current, wabaId: event.target.value }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  Access token
+                  <input
+                    required
+                    type="password"
+                    autoComplete="off"
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.accessToken}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({
+                        ...current,
+                        accessToken: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="flex gap-2 pt-2 md:col-span-2">
+                <button
+                  type="submit"
+                  className="btn btn-primary cursor-pointer"
+                  disabled={connecting}
+                >
+                  {connecting ? "Verifying and connecting..." : "Verify and connect"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary cursor-pointer"
+                  onClick={() => setShowManualConnect(false)}
+                  disabled={connecting}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       {loading ? (
-        <div className="p-4 text-center text-gray-500">Loading connected channels...</div>
+        <Card className="p-8 text-center text-muted-foreground">Loading connected channels...</Card>
       ) : channels.length === 0 ? (
-        <div className="card p-8 text-center text-gray-500 border border-dashed rounded-lg">
-          <p className="mb-4">No WhatsApp channels connected yet.</p>
+        <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
+          <div className="rounded-full bg-muted p-3 mb-3">
+            <MessageSquare className="size-6 text-muted-foreground" />
+          </div>
+          <CardTitle className="text-base mb-1">No WhatsApp channels connected yet.</CardTitle>
+          <CardDescription className="mb-4">
+            Connect a WhatsApp business account to start receiving and sending customer messages.
+          </CardDescription>
           {canManage && (
             <button
               type="button"
               onClick={() => openManualConnect()}
-              className="btn btn-secondary btn-sm"
+              className="btn btn-secondary btn-sm inline-flex items-center gap-1 cursor-pointer"
               disabled={connecting}
             >
+              <Plus className="size-3.5" />
               Connect your first channel
             </button>
           )}
-        </div>
+        </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {channels.map((channel) => (
-            <div key={channel.id} className="card p-4 border rounded-lg shadow-sm bg-white">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-semibold text-lg">{channel.name}</h3>
-                  <span className="text-xs text-gray-500">Type: {channel.type.toUpperCase()}</span>
+            <Card key={channel.id} className="border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-base font-semibold">{channel.name}</CardTitle>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      Type: {channel.type.toUpperCase()}
+                    </span>
+                  </div>
+                  <Badge
+                    variant={channel.status === "active" ? "default" : "outline"}
+                    className={
+                      channel.status === "active"
+                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                        : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
+                    }
+                  >
+                    {channel.status.toUpperCase()}
+                  </Badge>
                 </div>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    channel.status === "active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
-                >
-                  {channel.status.toUpperCase()}
-                </span>
-              </div>
-              {channel.statusReason && (
-                <p className="mb-3 text-sm text-amber-700">{channel.statusReason}</p>
-              )}
-              <div className="text-sm text-gray-600 space-y-1 mb-4">
-                <p>
-                  <strong>Phone Number ID:</strong> {channel.phoneNumberId}
-                </p>
-                <p>
-                  <strong>WABA ID:</strong> {channel.wabaId}
-                </p>
-              </div>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm text-muted-foreground pb-4">
+                {channel.statusReason && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                    {channel.statusReason}
+                  </p>
+                )}
+                <div className="space-y-1 font-mono text-xs">
+                  <p>
+                    <strong className="font-sans text-foreground text-sm">Phone Number ID:</strong>{" "}
+                    {channel.phoneNumberId}
+                  </p>
+                  <p>
+                    <strong className="font-sans text-foreground text-sm">WABA ID:</strong>{" "}
+                    {channel.wabaId}
+                  </p>
+                </div>
+              </CardContent>
               {canManage && (
-                <div className="flex flex-wrap gap-2 border-t pt-3 mt-2">
+                <CardFooter className="flex flex-wrap gap-2 border-t pt-3">
                   <button
                     type="button"
                     onClick={() => openManualConnect(channel)}
                     disabled={connecting}
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm cursor-pointer"
                   >
                     Reconnect with token
                   </button>
@@ -440,20 +494,20 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                     type="button"
                     onClick={() => void handleVerify(channel.id)}
                     disabled={verifyingId === channel.id}
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm cursor-pointer"
                   >
                     {verifyingId === channel.id ? "Checking..." : "Test connection"}
                   </button>
                   <button
                     type="button"
                     onClick={() => void handleDelete(channel.id)}
-                    className="btn btn-danger btn-sm text-red-600 hover:text-red-800"
+                    className="btn btn-danger btn-sm text-destructive hover:bg-destructive/10 cursor-pointer ml-auto"
                   >
                     Disconnect
                   </button>
-                </div>
+                </CardFooter>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
