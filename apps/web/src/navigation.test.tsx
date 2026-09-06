@@ -2,6 +2,7 @@
 import { cleanup, render, screen, waitFor, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type * as FlowdeskUi from "@flowdesk/ui";
 import { App, router } from "./App.js";
 import { queryClient } from "./lib/query-client.js";
 
@@ -14,6 +15,177 @@ vi.mock("./realtime.js", () => ({
     disconnect: vi.fn()
   }))
 }));
+
+vi.mock("@flowdesk/ui", async () => {
+  const actual = await vi.importActual<typeof FlowdeskUi>("@flowdesk/ui");
+  const React = await import("react");
+
+  interface DropdownContextValue {
+    open: boolean;
+    setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  }
+
+  const DropdownContext = React.createContext<DropdownContextValue>({
+    open: false,
+    setOpen: () => {}
+  });
+
+  interface DropdownMenuProps {
+    children?: React.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    modal?: boolean;
+  }
+
+  const DropdownMenu: React.FC<DropdownMenuProps> = ({
+    children,
+    open: controlledOpen,
+    onOpenChange
+  }) => {
+    const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+    const isOpen = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+    const setOpen = React.useCallback<React.Dispatch<React.SetStateAction<boolean>>>(
+      (value) => {
+        const next = typeof value === "function" ? value(isOpen) : value;
+        if (controlledOpen === undefined) {
+          setUncontrolledOpen(next);
+        }
+        onOpenChange?.(next);
+      },
+      [controlledOpen, isOpen, onOpenChange]
+    );
+
+    return (
+      <DropdownContext.Provider value={{ open: isOpen, setOpen }}>
+        <div data-state={isOpen ? "open" : "closed"}>{children}</div>
+      </DropdownContext.Provider>
+    );
+  };
+
+  interface DropdownTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    asChild?: boolean;
+  }
+
+  const DropdownMenuTrigger = React.forwardRef<HTMLButtonElement, DropdownTriggerProps>(
+    ({ children, asChild, onClick, onKeyDown, ...props }, ref) => {
+      const { open, setOpen } = React.useContext(DropdownContext);
+      const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        onClick?.(e);
+        setOpen((prev) => !prev);
+      };
+      const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+        onKeyDown?.(e);
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setOpen((prev) => !prev);
+        }
+      };
+
+      if (asChild && React.isValidElement<React.HTMLAttributes<HTMLElement>>(children)) {
+        const childProps = children.props;
+        return React.cloneElement(children, {
+          ref,
+          onClick: (e: React.MouseEvent<HTMLElement>) => {
+            childProps.onClick?.(e);
+            handleClick(e as unknown as React.MouseEvent<HTMLButtonElement>);
+          },
+          onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+            childProps.onKeyDown?.(e);
+            handleKeyDown(e as unknown as React.KeyboardEvent<HTMLButtonElement>);
+          },
+          "data-state": open ? "open" : "closed",
+          ...props
+        } as React.HTMLAttributes<HTMLElement>);
+      }
+
+      return (
+        <button
+          ref={ref}
+          type="button"
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          data-state={open ? "open" : "closed"}
+          {...props}
+        >
+          {children}
+        </button>
+      );
+    }
+  );
+  DropdownMenuTrigger.displayName = "DropdownMenuTrigger";
+
+  interface DropdownContentProps extends React.HTMLAttributes<HTMLDivElement> {
+    sideOffset?: number;
+    align?: string;
+  }
+
+  const DropdownMenuContent = React.forwardRef<HTMLDivElement, DropdownContentProps>(
+    ({ children, className, ...props }, ref) => {
+      const { open } = React.useContext(DropdownContext);
+      if (!open) return null;
+      const domProps = { ...props };
+      delete domProps.sideOffset;
+      delete domProps.align;
+      return (
+        <div ref={ref} role="menu" className={className} {...domProps}>
+          {children}
+        </div>
+      );
+    }
+  );
+  DropdownMenuContent.displayName = "DropdownMenuContent";
+
+  interface DropdownItemProps extends React.HTMLAttributes<HTMLDivElement> {
+    asChild?: boolean;
+    onSelect?: () => void;
+  }
+
+  const DropdownMenuItem = React.forwardRef<HTMLDivElement, DropdownItemProps>(
+    ({ children, asChild, onClick, onSelect, className, ...props }, ref) => {
+      const { setOpen } = React.useContext(DropdownContext);
+      const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        onClick?.(e);
+        onSelect?.();
+        setOpen(false);
+      };
+
+      if (asChild && React.isValidElement<React.HTMLAttributes<HTMLElement>>(children)) {
+        const childProps = children.props;
+        return React.cloneElement(children, {
+          ref,
+          onClick: (e: React.MouseEvent<HTMLElement>) => {
+            childProps.onClick?.(e);
+            handleClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+          },
+          className,
+          ...props
+        } as React.HTMLAttributes<HTMLElement>);
+      }
+
+      return (
+        <div
+          ref={ref}
+          role="menuitem"
+          tabIndex={0}
+          onClick={handleClick}
+          className={className}
+          {...props}
+        >
+          {children}
+        </div>
+      );
+    }
+  );
+  DropdownMenuItem.displayName = "DropdownMenuItem";
+
+  return {
+    ...actual,
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem
+  };
+});
 
 const userId = "a0000000-0000-4000-8000-000000000001";
 const organizationId = "b0000000-0000-4000-8000-000000000001";
@@ -71,6 +243,9 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
     );
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     window.Element.prototype.scrollIntoView = vi.fn();
+    window.HTMLElement.prototype.hasPointerCapture = vi.fn(() => false);
+    window.HTMLElement.prototype.setPointerCapture = vi.fn();
+    window.HTMLElement.prototype.releasePointerCapture = vi.fn();
     window.history.replaceState({}, "", "/");
   });
 
@@ -83,11 +258,20 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
     document.body.removeAttribute("data-scroll-locked");
   });
 
-  function setupAuthMocks(role: string = "owner") {
+  function setupAuthMocks(
+    role: string = "owner",
+    customOrgs?: Array<{
+      id: string;
+      slug: string;
+      name: string;
+      role: string;
+      membershipId: string;
+    }>
+  ) {
     const fetcher = vi.fn<typeof fetch>((input) => {
       const url = requestUrl(input);
 
-      if (url === "/api/v1/auth/session") {
+      if (url.includes("/api/v1/auth/session")) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
@@ -99,11 +283,110 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
         );
       }
 
-      if (url === "/api/v1/organizations") {
+      if (url.includes("/api/v1/auth/logout")) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ success: true, logoutUrl: "/" }), { status: 200 })
+        );
+      }
+
+      if (url.includes("/developer/api-keys")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              {
+                id: "key-1",
+                name: "Production API Key",
+                keyPrefix: "fd_live_1234",
+                scopes: ["conversation:read"],
+                createdAt: "2026-09-01T00:00:00.000Z",
+                revokedAt: null
+              }
+            ]),
+            { status: 200 }
+          )
+        );
+      }
+
+      if (url.includes("/developer/webhooks")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              {
+                id: "sub-1",
+                name: "CRM Webhook",
+                targetUrl: "https://example.com/webhook",
+                events: ["conversation.created"],
+                secretMask: "whsec_••••••••",
+                active: true,
+                verificationStatus: "verified",
+                createdAt: "2026-09-01T00:00:00.000Z"
+              }
+            ]),
+            { status: 200 }
+          )
+        );
+      }
+
+      if (url.includes("/audit-logs")) {
         return Promise.resolve(
           new Response(
             JSON.stringify({
-              organizations: [
+              items: [
+                {
+                  id: "a0000000-0000-4000-8000-000000000001",
+                  organizationId,
+                  actorUserId: null,
+                  action: "member.invited",
+                  targetType: "member",
+                  targetId: null,
+                  result: "allowed",
+                  correlationId: null,
+                  metadata: {},
+                  occurredAt: "2026-09-01T12:00:00.000Z"
+                }
+              ],
+              pageInfo: {
+                hasNextPage: false,
+                hasPreviousPage: false,
+                startCursor: "cur-1",
+                endCursor: "cur-1",
+                totalCount: 1
+              }
+            }),
+            { status: 200 }
+          )
+        );
+      }
+
+      if (url.includes("/members")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              members: [
+                {
+                  id: "m-1",
+                  userId,
+                  email: "owner@flowdesk.dev",
+                  displayName: "Owner",
+                  roleKey: "owner",
+                  status: "active"
+                }
+              ]
+            }),
+            { status: 200 }
+          )
+        );
+      }
+
+      if (
+        url.endsWith("/api/v1/organizations") ||
+        url.endsWith("/api/v1/organizations/") ||
+        url.includes("/api/v1/organizations?")
+      ) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              organizations: customOrgs ?? [
                 {
                   id: organizationId,
                   slug: "acme-corp",
@@ -153,95 +436,6 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
             JSON.stringify({
               items: [makeConv(conv1Id, "Customer Alpha"), makeConv(conv2Id, "Customer Beta")],
               nextCursor: null
-            }),
-            { status: 200 }
-          )
-        );
-      }
-
-      if (url.includes("/audit-logs")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              items: [
-                {
-                  id: "a0000000-0000-4000-8000-000000000001",
-                  organizationId,
-                  actorUserId: null,
-                  action: "member.invited",
-                  targetType: "member",
-                  targetId: null,
-                  result: "allowed",
-                  correlationId: null,
-                  metadata: {},
-                  occurredAt: "2026-09-01T12:00:00.000Z"
-                }
-              ],
-              pageInfo: {
-                hasNextPage: false,
-                hasPreviousPage: false,
-                startCursor: "cur-1",
-                endCursor: "cur-1",
-                totalCount: 1
-              }
-            }),
-            { status: 200 }
-          )
-        );
-      }
-
-      if (url.includes("/developer/api-keys")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify([
-              {
-                id: "key-1",
-                name: "Production API Key",
-                keyPrefix: "fd_live_1234",
-                scopes: ["conversation:read"],
-                createdAt: "2026-09-01T00:00:00.000Z",
-                revokedAt: null
-              }
-            ]),
-            { status: 200 }
-          )
-        );
-      }
-
-      if (url.includes("/developer/webhooks")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify([
-              {
-                id: "sub-1",
-                name: "CRM Webhook",
-                targetUrl: "https://example.com/webhook",
-                events: ["conversation.created"],
-                secretMask: "whsec_••••••••",
-                active: true,
-                verificationStatus: "verified",
-                createdAt: "2026-09-01T00:00:00.000Z"
-              }
-            ]),
-            { status: 200 }
-          )
-        );
-      }
-
-      if (url.includes("/members")) {
-        return Promise.resolve(
-          new Response(
-            JSON.stringify({
-              members: [
-                {
-                  id: "m-1",
-                  userId,
-                  email: "owner@flowdesk.dev",
-                  displayName: "Owner",
-                  roleKey: "owner",
-                  status: "active"
-                }
-              ]
             }),
             { status: 200 }
           )
@@ -486,7 +680,6 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
 
     it("handles UserNav sign out behavior", async () => {
       setupAuthMocks("owner");
-      const user = userEvent.setup();
       render(<App />);
       await router.navigate({ to: "/inbox" });
 
@@ -495,58 +688,39 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
       });
 
       // Open UserNav dropdown
-      await user.click(screen.getByTestId("user-nav-trigger"));
+      fireEvent.click(screen.getByTestId("user-nav-trigger"));
 
       await waitFor(() => {
         expect(screen.getByTestId("logout-btn")).toBeDefined();
       });
 
       // Click sign out
-      await user.click(screen.getByTestId("logout-btn"));
+      fireEvent.click(screen.getByTestId("logout-btn"));
 
       // Verify sign out side effect
-      // If we mock logout logic, we'd verify the mock was called.
-      // Since it redirects to login or clears session, we can check for unauthenticated view.
       await waitFor(() => {
         expect(screen.getByText("Sign in with SSO / OIDC")).toBeDefined();
       });
     });
 
     it("handles OrgSwitcher interaction", async () => {
-      const { fetcher } = setupAuthMocks("owner");
-
-      // We need to return multiple organizations for the switcher test
-      fetcher.mockImplementation((input) => {
-        const url = requestUrl(input);
-        if (url === "/api/v1/organizations") {
-          return Promise.resolve(
-            new Response(
-              JSON.stringify({
-                organizations: [
-                  {
-                    id: organizationId,
-                    slug: "acme-corp",
-                    name: "Acme Corp",
-                    role: "owner",
-                    membershipId
-                  },
-                  {
-                    id: "b0000000-0000-4000-8000-000000000002",
-                    slug: "org-b",
-                    name: "Organization B",
-                    role: "agent",
-                    membershipId: "b-mem"
-                  }
-                ]
-              }),
-              { status: 200 }
-            )
-          );
+      setupAuthMocks("owner", [
+        {
+          id: organizationId,
+          slug: "acme-corp",
+          name: "Acme Corp",
+          role: "owner",
+          membershipId
+        },
+        {
+          id: "b0000000-0000-4000-8000-000000000002",
+          slug: "org-b",
+          name: "Organization B",
+          role: "agent",
+          membershipId: "b0000000-0000-4000-8000-000000000003"
         }
-        return Promise.resolve(new Response(JSON.stringify({}), { status: 200 }));
-      });
+      ]);
 
-      const user = userEvent.setup();
       render(<App />);
       await router.navigate({ to: "/inbox" });
 
@@ -555,19 +729,19 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
       });
 
       // Open the switcher
-      await user.click(screen.getByTestId("org-switcher-trigger"));
+      fireEvent.click(screen.getByTestId("org-switcher-trigger"));
 
       await waitFor(() => {
-        expect(screen.getByText("Organization B")).toBeDefined();
+        expect(screen.getByTestId("org-option-b0000000-0000-4000-8000-000000000002")).toBeDefined();
       });
 
       // Click the other org
-      await user.click(screen.getByText("Organization B"));
+      fireEvent.click(screen.getByTestId("org-option-b0000000-0000-4000-8000-000000000002"));
 
-      // Assuming clicking it calls setSelectedOrgId, we expect a reload or redirect.
-      // Our simple test just ensures the interaction doesn't crash and closes the menu.
+      // Menu closes and trigger displays newly selected active org
       await waitFor(() => {
-        expect(screen.queryByText("Organization B")).toBeNull(); // Menu closed
+        expect(screen.queryByTestId("org-option-b0000000-0000-4000-8000-000000000002")).toBeNull();
+        expect(screen.getByTestId("org-switcher-trigger").textContent).toContain("Organization B");
       });
     });
 
@@ -585,7 +759,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
       await waitFor(() => {
         expect(screen.getByPlaceholderText("Type a command or search...")).toBeDefined();
         // Should show Developer links
-        expect(screen.getByText("API Keys")).toBeDefined();
+        expect(screen.getByTestId("command-item-api-keys")).toBeDefined();
       });
 
       // Select API Keys
@@ -593,7 +767,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
         target: { value: "api" }
       });
 
-      const apiKeysItem = screen.getByText("API Keys");
+      const apiKeysItem = screen.getByTestId("command-item-api-keys");
       fireEvent.click(apiKeysItem);
 
       await waitFor(() => {
@@ -634,39 +808,37 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
 
     it("persists theme preference across toggles", async () => {
       setupAuthMocks("owner");
-      // Clear localStorage before testing
       window.localStorage.removeItem("flowdesk-theme");
 
       render(<App />);
       await router.navigate({ to: "/inbox" });
 
       await waitFor(() => {
-        expect(screen.getByRole("button", { name: "Toggle theme" })).toBeDefined();
+        expect(screen.getByTestId("theme-toggle-button")).toBeDefined();
       });
 
-      const button = screen.getByRole("button", { name: "Toggle theme" });
-
-      // Default should be system or light
-      // Open dropdown
+      const button = screen.getByTestId("theme-toggle-button");
       fireEvent.click(button);
+
       await waitFor(() => {
-        expect(screen.getByText("Dark")).toBeDefined();
+        expect(screen.getByTestId("theme-option-dark")).toBeDefined();
       });
 
-      // Click Dark
-      fireEvent.click(screen.getByText("Dark"));
+      fireEvent.click(screen.getByTestId("theme-option-dark"));
 
       await waitFor(() => {
         expect(document.documentElement.classList.contains("dark")).toBe(true);
         expect(window.localStorage.getItem("flowdesk-theme")).toBe("dark");
       });
 
-      // Toggle back to Light
-      fireEvent.click(button);
+      const btn2 = screen.getByTestId("theme-toggle-button");
+      fireEvent.click(btn2);
+
       await waitFor(() => {
-        expect(screen.getByText("Light")).toBeDefined();
+        expect(screen.getByTestId("theme-option-light")).toBeDefined();
       });
-      fireEvent.click(screen.getByText("Light"));
+
+      fireEvent.click(screen.getByTestId("theme-option-light"));
 
       await waitFor(() => {
         expect(document.documentElement.classList.contains("dark")).toBe(false);

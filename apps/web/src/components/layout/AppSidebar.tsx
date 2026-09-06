@@ -2,7 +2,12 @@ import * as React from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useAuth } from "../../features/auth/context.js";
-import { navigationGroups, isRouteActive, type NavItem } from "./navigation.js";
+import {
+  navigationGroups,
+  workspaceSettingsItem,
+  isRouteActive,
+  type NavItem
+} from "./navigation.js";
 import { OrgSwitcher } from "./OrgSwitcher.js";
 import { UserNav } from "./UserNav.js";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Button } from "@flowdesk/ui";
@@ -163,6 +168,10 @@ export function AppSidebar({
               </div>
             );
           })}
+
+          <div className="pt-2 border-t border-border/40">
+            {renderNavItem(workspaceSettingsItem)}
+          </div>
         </div>
 
         {/* Sidebar Footer: User Profile & Account Actions */}

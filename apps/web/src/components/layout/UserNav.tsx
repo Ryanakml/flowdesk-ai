@@ -35,7 +35,7 @@ export function UserNav({ collapsed = false }: UserNavProps) {
     : "U";
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"

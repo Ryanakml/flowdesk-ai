@@ -88,10 +88,12 @@ export function DeveloperSettingsView({
     try {
       setLoadingKeys(true);
       const data = await listApiKeysApi(orgId);
-      setKeys(data);
-      return data;
+      const safeData = Array.isArray(data) ? data : [];
+      setKeys(safeData);
+      return safeData;
     } catch (err) {
       showToast?.(err instanceof Error ? err.message : "Failed to load API keys", "error");
+      setKeys([]);
       return [];
     } finally {
       setLoadingKeys(false);
@@ -102,10 +104,12 @@ export function DeveloperSettingsView({
     try {
       setLoadingWebhooks(true);
       const data = (await listWebhooksApi(orgId)) as UiWebhookRecord[];
-      setWebhooks(data);
-      return data;
+      const safeData = Array.isArray(data) ? data : [];
+      setWebhooks(safeData);
+      return safeData;
     } catch (err) {
       showToast?.(err instanceof Error ? err.message : "Failed to load webhooks", "error");
+      setWebhooks([]);
       return [];
     } finally {
       setLoadingWebhooks(false);

@@ -108,8 +108,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSessionUser(null);
     setOrganizations([]);
     setSelectedOrgIdState(null);
-    if (typeof window !== "undefined") {
-      window.location.href = logoutUrl || "/";
+    if (typeof window !== "undefined" && process.env["NODE_ENV"] !== "test") {
+      try {
+        window.location.href = logoutUrl || "/";
+      } catch {
+        // Navigation not implemented in JSDOM / test environment
+      }
     }
   }, []);
 

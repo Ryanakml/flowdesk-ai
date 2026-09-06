@@ -44,7 +44,7 @@ export function OrgSwitcher({ collapsed = false }: OrgSwitcherProps) {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
