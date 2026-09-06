@@ -879,7 +879,7 @@ export function InboxView({
   };
 
   return (
-    <div className="inbox-container" data-testid="inbox-container">
+    <div className="legacy-ui inbox-container" data-testid="inbox-container">
       {connectionState !== "connected" && (
         <div
           className={`connection-banner ${connectionState}`}

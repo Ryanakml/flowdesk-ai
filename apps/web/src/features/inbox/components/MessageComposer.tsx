@@ -1,5 +1,5 @@
 import { useRef, useId } from "react";
-import { cn } from "@flowdesk/ui";
+import { cn, Button } from "@flowdesk/ui";
 import { Send, Paperclip, Layout } from "lucide-react";
 
 type ConnectionState = "connecting" | "connected" | "reconnecting" | "offline";
@@ -83,14 +83,15 @@ export function MessageComposer({
           messaging is blocked by WhatsApp policy. You must use an approved template to contact this
           customer.
         </div>
-        <button
+        <Button
           type="button"
-          className="flex-shrink-0 px-3 py-1.5 text-xs font-medium rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          size="sm"
           onClick={onOpenTemplate}
           data-testid="btn-open-template-composer"
+          className="flex-shrink-0"
         >
           📋 Select WhatsApp Template
-        </button>
+        </Button>
       </div>
     );
   }
@@ -98,7 +99,7 @@ export function MessageComposer({
   return (
     <footer className="thread-composer-wrapper border-t border-border bg-background">
       <form
-        className="thread-composer px-3 py-2"
+        className="thread-composer px-3 py-2 flex flex-col"
         onSubmit={(e) => {
           e.preventDefault();
           onSend();
@@ -143,42 +144,47 @@ export function MessageComposer({
           />
 
           {/* Attach button */}
-          <button
+          <Button
             type="button"
-            className="px-2.5 py-1.5 text-xs rounded border border-input hover:bg-muted transition-colors flex items-center gap-1 disabled:opacity-40"
+            variant="outline"
+            size="sm"
             onClick={() => mediaInputRef.current?.click()}
             disabled={mediaState !== null}
             aria-label="Attach"
             data-testid="btn-attach-media"
+            className="h-8 text-xs px-2.5"
           >
             <Paperclip className="w-3.5 h-3.5" />
             {mediaState ? (mediaState === "scanning" ? "Scanning…" : "Sending…") : "Attach"}
-          </button>
+          </Button>
 
           {/* Template button */}
-          <button
+          <Button
             type="button"
-            className="px-2.5 py-1.5 text-xs rounded border border-input hover:bg-muted transition-colors flex items-center gap-1"
+            variant="outline"
+            size="sm"
             onClick={onOpenTemplate}
             data-testid="btn-open-template-composer"
             title="Send WhatsApp Template"
+            className="h-8 text-xs px-2.5"
           >
             <Layout className="w-3.5 h-3.5" />
             Template
-          </button>
+          </Button>
 
           <div className="flex-1" />
 
           {/* Send button */}
-          <button
+          <Button
             type="submit"
-            className="px-3 py-1.5 text-sm font-medium rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            size="sm"
             disabled={!composerText.trim() || isSending}
             data-testid="composer-send-btn"
+            className="h-8 text-xs px-3"
           >
             <Send className="w-3.5 h-3.5" />
             {isSending ? "Sending…" : "Send"}
-          </button>
+          </Button>
         </div>
       </form>
     </footer>

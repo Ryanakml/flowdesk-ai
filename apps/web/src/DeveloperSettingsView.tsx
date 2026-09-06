@@ -14,7 +14,7 @@ import {
   testWebhookApi
 } from "./api.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card.js";
-import { Badge } from "@flowdesk/ui";
+import { Badge, Button } from "@flowdesk/ui";
 import { Code, Key, Webhook, Copy } from "lucide-react";
 
 export interface DeveloperSettingsViewProps {
@@ -285,9 +285,10 @@ export function DeveloperSettingsView({
           </p>
         </div>
         <div className="flex gap-2">
-          <button
+          <Button
             type="button"
-            className={`btn ${activeTab === "keys" ? "btn-primary" : "btn-secondary"} cursor-pointer inline-flex items-center gap-1.5`}
+            variant={activeTab === "keys" ? "default" : "outline"}
+            className="cursor-pointer inline-flex items-center gap-1.5"
             onClick={() => {
               setActiveTab("keys");
               onTabChange?.("keys");
@@ -295,10 +296,11 @@ export function DeveloperSettingsView({
           >
             <Key className="size-4" />
             API Keys
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className={`btn ${activeTab === "webhooks" ? "btn-primary" : "btn-secondary"} cursor-pointer inline-flex items-center gap-1.5`}
+            variant={activeTab === "webhooks" ? "default" : "outline"}
+            className="cursor-pointer inline-flex items-center gap-1.5"
             onClick={() => {
               setActiveTab("webhooks");
               onTabChange?.("webhooks");
@@ -306,7 +308,7 @@ export function DeveloperSettingsView({
           >
             <Webhook className="size-4" />
             Webhooks
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -334,9 +336,11 @@ export function DeveloperSettingsView({
               <code className="p-2.5 bg-background border rounded-md font-mono text-xs break-all flex-1 text-foreground shadow-xs">
                 {generatedRawKey}
               </code>
-              <button
+              <Button
                 type="button"
-                className="btn btn-secondary btn-sm inline-flex items-center gap-1 cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="inline-flex items-center gap-1 cursor-pointer"
                 onClick={() => {
                   void navigator.clipboard.writeText(generatedRawKey);
                   showToast?.("Copied to clipboard!", "info");
@@ -344,7 +348,7 @@ export function DeveloperSettingsView({
               >
                 <Copy className="size-3.5" />
                 Copy
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -375,9 +379,11 @@ export function DeveloperSettingsView({
               <code className="p-2.5 bg-background border rounded-md font-mono text-xs break-all flex-1 text-foreground shadow-xs">
                 {generatedWebhookSecret.secret}
               </code>
-              <button
+              <Button
                 type="button"
-                className="btn btn-secondary btn-sm inline-flex items-center gap-1 cursor-pointer"
+                variant="outline"
+                size="sm"
+                className="inline-flex items-center gap-1 cursor-pointer"
                 onClick={() => {
                   void navigator.clipboard.writeText(generatedWebhookSecret.secret);
                   showToast?.("Webhook signing secret copied", "info");
@@ -385,7 +391,7 @@ export function DeveloperSettingsView({
               >
                 <Copy className="size-3.5" />
                 Copy
-              </button>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -396,13 +402,14 @@ export function DeveloperSettingsView({
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold text-foreground">Scoped API Keys</h3>
             {canManage && (
-              <button
+              <Button
                 type="button"
-                className="btn btn-primary btn-sm inline-flex items-center gap-1 cursor-pointer"
+                size="sm"
+                className="inline-flex items-center gap-1 cursor-pointer"
                 onClick={() => setShowKeyModal(true)}
               >
                 + Generate New API Key
-              </button>
+              </Button>
             )}
           </div>
 
@@ -419,13 +426,15 @@ export function DeveloperSettingsView({
                 workspace.
               </CardDescription>
               {canManage && (
-                <button
+                <Button
                   type="button"
-                  className="btn btn-secondary btn-sm cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
                   onClick={() => setShowKeyModal(true)}
                 >
                   Create your first API key
-                </button>
+                </Button>
               )}
             </Card>
           ) : (
@@ -462,13 +471,15 @@ export function DeveloperSettingsView({
                     </div>
                   </div>
                   {canManage && !key.revokedAt && (
-                    <button
+                    <Button
                       type="button"
-                      className="btn btn-danger btn-sm text-destructive hover:bg-destructive/10 cursor-pointer"
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:bg-destructive/10 cursor-pointer"
                       onClick={() => void handleRevokeKey(key.id)}
                     >
                       Revoke Key
-                    </button>
+                    </Button>
                   )}
                 </Card>
               ))}
@@ -484,13 +495,14 @@ export function DeveloperSettingsView({
               Outbound Webhook Subscriptions
             </h3>
             {canManage && (
-              <button
+              <Button
                 type="button"
-                className="btn btn-primary btn-sm inline-flex items-center gap-1 cursor-pointer"
+                size="sm"
+                className="inline-flex items-center gap-1 cursor-pointer"
                 onClick={() => setShowWebhookModal(true)}
               >
                 + Register Webhook
-              </button>
+              </Button>
             )}
           </div>
 
@@ -509,13 +521,15 @@ export function DeveloperSettingsView({
                 FlowDesk.
               </CardDescription>
               {canManage && (
-                <button
+                <Button
                   type="button"
-                  className="btn btn-secondary btn-sm cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
                   onClick={() => setShowWebhookModal(true)}
                 >
                   Register your first webhook
-                </button>
+                </Button>
               )}
             </Card>
           ) : (
@@ -561,30 +575,36 @@ export function DeveloperSettingsView({
                       </div>
                       <div className="flex gap-2 flex-wrap justify-end">
                         {canManage && (
-                          <button
+                          <Button
                             type="button"
-                            className="btn btn-secondary btn-sm cursor-pointer"
+                            variant="outline"
+                            size="sm"
+                            className="cursor-pointer"
                             disabled={testingWebhookId === webhook.id}
                             onClick={() => void handleTestWebhook(webhook.id)}
                           >
                             {testingWebhookId === webhook.id ? "Testing…" : "Send Test / Verify"}
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
                           type="button"
-                          className="btn btn-secondary btn-sm cursor-pointer"
+                          variant="outline"
+                          size="sm"
+                          className="cursor-pointer"
                           onClick={() => void handleToggleDeliveries(webhook.id)}
                         >
                           {expanded ? "Hide Deliveries" : "View Deliveries"}
-                        </button>
+                        </Button>
                         {canManage && (
-                          <button
+                          <Button
                             type="button"
-                            className="btn btn-danger btn-sm text-destructive hover:bg-destructive/10 cursor-pointer"
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:bg-destructive/10 cursor-pointer"
                             onClick={() => void handleDeleteWebhook(webhook.id)}
                           >
                             Delete
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
@@ -690,20 +710,18 @@ export function DeveloperSettingsView({
                 </div>
               </div>
               <div className="flex justify-end gap-2 border-t border-border pt-4">
-                <button
+                <Button
                   type="button"
-                  className="btn btn-secondary text-sm cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
                   onClick={() => setShowKeyModal(false)}
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn btn-primary text-sm cursor-pointer"
-                >
+                </Button>
+                <Button type="submit" size="sm" disabled={submitting} className="cursor-pointer">
                   {submitting ? "Generating..." : "Generate Key"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -757,20 +775,18 @@ export function DeveloperSettingsView({
                 </div>
               </div>
               <div className="flex justify-end gap-2 border-t border-border pt-4">
-                <button
+                <Button
                   type="button"
-                  className="btn btn-secondary text-sm cursor-pointer"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
                   onClick={() => setShowWebhookModal(false)}
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn btn-primary text-sm cursor-pointer"
-                >
+                </Button>
+                <Button type="submit" size="sm" disabled={submitting} className="cursor-pointer">
                   {submitting ? "Registering..." : "Register Webhook"}
-                </button>
+                </Button>
               </div>
             </form>
           </div>

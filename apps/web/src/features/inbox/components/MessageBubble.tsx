@@ -110,15 +110,20 @@ export function MessageBubble({ message: msg, onRetry, onRemove }: MessageBubble
       <div className={cn("max-w-[75%] flex flex-col", isInbound ? "items-start" : "items-end")}>
         <div
           className={cn(
-            "message-bubble px-3 py-2 rounded-2xl text-sm",
+            "message-bubble px-3.5 py-2 rounded-2xl text-sm shadow-xs",
             isInbound
-              ? "bg-muted text-foreground rounded-tl-sm"
-              : "bg-primary text-primary-foreground rounded-tr-sm"
+              ? "bg-muted text-foreground rounded-tl-xs border border-border/50"
+              : "bg-primary text-primary-foreground rounded-tr-xs"
           )}
         >
           <div className="message-text whitespace-pre-wrap break-words">{msg.content}</div>
-          <div className="message-meta flex items-center gap-1 mt-1">
-            <span className="message-time text-xs opacity-70">{formatTime(msg.createdAt)}</span>
+          <div
+            className={cn(
+              "message-meta flex items-center gap-1 mt-1 text-xs",
+              isInbound ? "text-muted-foreground" : "text-primary-foreground/80"
+            )}
+          >
+            <span className="message-time">{formatTime(msg.createdAt)}</span>
             {renderStatusCheckmark(msg)}
           </div>
         </div>

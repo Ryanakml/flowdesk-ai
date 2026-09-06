@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle
 } from "../../components/ui/card.js";
-import { Badge } from "@flowdesk/ui";
+import { Badge, Button } from "@flowdesk/ui";
 import { Building2, ShieldCheck, UserCheck, Users, Inbox } from "lucide-react";
 
 export function WorkspaceView() {
@@ -81,15 +81,16 @@ export function WorkspaceView() {
           </div>
           <CardFooter className="border-t pt-4">
             {canInvite ? (
-              <Link
-                to="/team"
-                search={{ invite: true }}
-                className="btn btn-primary inline-flex items-center gap-1.5 cursor-pointer"
+              <Button
+                asChild
                 id="workspace-invite-team-btn"
+                className="cursor-pointer inline-flex items-center gap-1.5"
               >
-                <Users className="size-4" />
-                Invite team members
-              </Link>
+                <Link to="/team" search={{ invite: true }}>
+                  <Users className="size-4" />
+                  Invite team members
+                </Link>
+              </Button>
             ) : (
               <p className="text-xs text-muted-foreground">
                 Only Owners and Admins have permission to invite new members.

@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle
 } from "./components/ui/card.js";
-import { Badge } from "@flowdesk/ui";
+import { Badge, Button } from "@flowdesk/ui";
 import { MessageSquare, Plus, Zap } from "lucide-react";
 
 interface FacebookSdk {
@@ -293,25 +293,26 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
         </div>
         {canManage && (
           <div className="flex flex-wrap gap-2">
-            <button
+            <Button
               type="button"
               onClick={() => openManualConnect()}
-              className="btn btn-primary inline-flex items-center gap-1.5 cursor-pointer"
+              className="inline-flex items-center gap-1.5 cursor-pointer"
               id="connect-channel-btn"
               disabled={connecting}
             >
               <Plus className="size-4" />
               Connect WhatsApp
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => void handleConnect()}
-              className="btn btn-secondary inline-flex items-center gap-1.5 cursor-pointer"
+              className="inline-flex items-center gap-1.5 cursor-pointer"
               disabled={connecting}
             >
               <Zap className="size-4" />
               Connect with Meta Signup
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -395,21 +396,18 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                 </label>
               </div>
               <div className="flex gap-2 pt-2 md:col-span-2">
-                <button
-                  type="submit"
-                  className="btn btn-primary cursor-pointer"
-                  disabled={connecting}
-                >
+                <Button type="submit" className="cursor-pointer" disabled={connecting}>
                   {connecting ? "Verifying and connecting..." : "Verify and connect"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="btn btn-secondary cursor-pointer"
+                  variant="outline"
+                  className="cursor-pointer"
                   onClick={() => setShowManualConnect(false)}
                   disabled={connecting}
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </form>
           </CardContent>
@@ -428,15 +426,17 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
             Connect a WhatsApp business account to start receiving and sending customer messages.
           </CardDescription>
           {canManage && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => openManualConnect()}
-              className="btn btn-secondary btn-sm inline-flex items-center gap-1 cursor-pointer"
+              className="inline-flex items-center gap-1 cursor-pointer"
               disabled={connecting}
             >
               <Plus className="size-3.5" />
               Connect your first channel
-            </button>
+            </Button>
           )}
         </Card>
       ) : (
@@ -482,29 +482,35 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
               </CardContent>
               {canManage && (
                 <CardFooter className="flex flex-wrap gap-2 border-t pt-3">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => openManualConnect(channel)}
                     disabled={connecting}
-                    className="btn btn-secondary btn-sm cursor-pointer"
+                    className="cursor-pointer"
                   >
                     Reconnect with token
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     onClick={() => void handleVerify(channel.id)}
                     disabled={verifyingId === channel.id}
-                    className="btn btn-secondary btn-sm cursor-pointer"
+                    className="cursor-pointer"
                   >
                     {verifyingId === channel.id ? "Checking..." : "Test connection"}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => void handleDelete(channel.id)}
-                    className="btn btn-danger btn-sm text-destructive hover:bg-destructive/10 cursor-pointer ml-auto"
+                    className="text-destructive hover:bg-destructive/10 cursor-pointer ml-auto"
                   >
                     Disconnect
-                  </button>
+                  </Button>
                 </CardFooter>
               )}
             </Card>
