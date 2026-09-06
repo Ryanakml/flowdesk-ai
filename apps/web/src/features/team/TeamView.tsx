@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import type { MembershipMember } from "@flowdesk/contracts";
 import { type RoleKey, hasPermission } from "@flowdesk/domain";
-import { Plus, UserX } from "lucide-react";
+import { Plus, UserX, Users, UserCheck, Shield, Search } from "lucide-react";
 import {
   Badge,
   Button,
@@ -143,8 +143,108 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
     }
   };
 
+  const totalMembers = members.length;
+  const activeMembers = members.filter((m) => m.status === "active").length;
+  const adminMembers = members.filter((m) => m.roleKey === "owner" || m.roleKey === "admin").length;
+  const agentMembers = members.filter(
+    (m) => m.roleKey === "agent" || m.roleKey === "supervisor"
+  ).length;
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+
+  const filteredMembers = members.filter((member) => {
+    const matchesSearch =
+      !searchQuery.trim() ||
+      member.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === "all" || member.roleKey === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8" data-testid="team-view">
+      {/* Donor-transplanted User Stat Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="border border-border">
+          <CardContent className="space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <Users className="text-muted-foreground size-6" />
+              <Badge
+                variant="outline"
+                className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
+              >
+                Team
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm font-medium">Total Members</p>
+              <div className="text-2xl font-bold">{totalMembers}</div>
+              <p className="text-xs text-muted-foreground">
+                in {activeOrg?.name ?? "organization"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border">
+          <CardContent className="space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <UserCheck className="text-muted-foreground size-6" />
+              <Badge
+                variant="outline"
+                className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
+              >
+                Active
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm font-medium">Active Seats</p>
+              <div className="text-2xl font-bold">{activeMembers}</div>
+              <p className="text-xs text-muted-foreground">currently active</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border">
+          <CardContent className="space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <Shield className="text-muted-foreground size-6" />
+              <Badge
+                variant="outline"
+                className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/20 dark:text-blue-400"
+              >
+                Admin
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm font-medium">Administrators</p>
+              <div className="text-2xl font-bold">{adminMembers}</div>
+              <p className="text-xs text-muted-foreground">owners & admins</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-border">
+          <CardContent className="space-y-4 p-5">
+            <div className="flex items-center justify-between">
+              <UserCheck className="text-muted-foreground size-6" />
+              <Badge
+                variant="outline"
+                className="border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/20 dark:text-purple-400"
+              >
+                Support
+              </Badge>
+            </div>
+            <div className="space-y-1">
+              <p className="text-muted-foreground text-sm font-medium">Agents & Supervisors</p>
+              <div className="text-2xl font-bold">{agentMembers}</div>
+              <p className="text-xs text-muted-foreground">handling inbox</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <div className="space-y-1">
@@ -166,10 +266,39 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
             </Button>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Donor Search and Role Filter Toolbar */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search members..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-36 h-9 text-xs cursor-pointer">
+                  <SelectValue placeholder="All Roles" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="owner">Owner</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="analyst">Analyst</SelectItem>
+                  <SelectItem value="billing_admin">Billing Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           {loadingMembers ? (
             <div className="py-12 text-center text-sm text-muted-foreground">Loading team…</div>
-          ) : members.length === 0 ? (
+          ) : filteredMembers.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">No members found.</div>
           ) : (
             <div className="rounded-md border border-border overflow-hidden">
@@ -184,7 +313,7 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {members.map((member) => (
+                  {filteredMembers.map((member) => (
                     <TableRow key={member.id} className="hover:bg-muted/40 transition-colors">
                       <TableCell className="font-semibold text-foreground">
                         {member.displayName}

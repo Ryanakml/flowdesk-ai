@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import type { Conversation, InboxWorkspaceResourcesResponse } from "@flowdesk/contracts";
 import { Skeleton } from "@flowdesk/ui";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import { ConversationItem } from "./ConversationItem.js";
 import type { StatusFilter, AssigneeFilter } from "../hooks/useConversationFilters.js";
 
@@ -105,14 +105,17 @@ export function ConversationList({
         </div>
 
         {/* Search */}
-        <input
-          type="text"
-          className="w-full h-8 px-2.5 text-sm rounded-md border border-input bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          placeholder={searchPlaceholder}
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          aria-label="Search conversations"
-        />
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            className="w-full h-8 pl-8 pr-2.5 text-xs rounded-md border border-input bg-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-text"
+            placeholder={searchPlaceholder}
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            aria-label="Search conversations"
+          />
+        </div>
       </div>
 
       {/* Status Filter Tabs */}
