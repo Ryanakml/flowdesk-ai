@@ -8,6 +8,7 @@ import { OnboardingView } from "../features/onboarding/OnboardingView.js";
 import { InvitationView } from "../features/invitations/InvitationView.js";
 
 import { Card } from "../components/ui/card.js";
+import { Button } from "@flowdesk/ui";
 import { AlertCircle, FileQuestion, RefreshCw } from "lucide-react";
 
 export const Route = createRootRoute({
@@ -29,12 +30,9 @@ function RootNotFoundComponent() {
         <p className="text-sm text-muted-foreground mb-6">
           The page you requested could not be found or has been moved to another location.
         </p>
-        <Link
-          to="/inbox"
-          className="btn btn-primary inline-flex items-center justify-center w-full cursor-pointer"
-        >
-          Return to Inbox
-        </Link>
+        <Button asChild className="w-full cursor-pointer">
+          <Link to="/inbox">Return to Inbox</Link>
+        </Button>
       </Card>
     </div>
   );
@@ -57,20 +55,17 @@ function RootErrorComponent({ error }: { error: unknown }) {
           A client application error occurred. Please reload or return to the inbox.
         </p>
         <div className="flex flex-col gap-2">
-          <button
+          <Button
             type="button"
             onClick={() => window.location.reload()}
-            className="btn btn-primary inline-flex items-center justify-center gap-1.5 cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <RefreshCw className="size-4" />
             Reload Application
-          </button>
-          <Link
-            to="/inbox"
-            className="btn btn-secondary inline-flex items-center justify-center cursor-pointer"
-          >
-            Return to Inbox
-          </Link>
+          </Button>
+          <Button asChild variant="outline" className="cursor-pointer">
+            <Link to="/inbox">Return to Inbox</Link>
+          </Button>
         </div>
       </Card>
     </div>
