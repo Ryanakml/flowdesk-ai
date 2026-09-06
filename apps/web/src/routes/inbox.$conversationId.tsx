@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "../features/auth/context.js";
-import { InboxView } from "../InboxView.js";
+import { InboxWorkspace } from "../features/inbox/InboxWorkspace.js";
 import { handleRealtimeHint, handleRealtimeReconciliation } from "../lib/realtime-adapter.js";
 
 export const Route = createFileRoute("/inbox/$conversationId")({
@@ -19,7 +19,7 @@ function InboxConversationRouteComponent() {
   }
 
   return (
-    <InboxView
+    <InboxWorkspace
       key={conversationId}
       organizationId={selectedOrgId}
       userRole={currentRole}
