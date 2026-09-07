@@ -134,8 +134,8 @@ export function TemplateDialog({
                       {templatePreview.renderedBody}
                     </div>
                     <div className="preview-meta">
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                        ✓ Verified & Approved
+                      <span className="text-xs font-medium text-success">
+                        Verified &amp; Approved
                       </span>
                     </div>
                   </div>

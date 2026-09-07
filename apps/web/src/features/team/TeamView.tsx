@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useId } from "react";
 import type { MembershipMember } from "@flowdesk/contracts";
 import { type RoleKey, hasPermission } from "@flowdesk/domain";
-import { Plus, UserX, Users, UserCheck, Shield, Search } from "lucide-react";
+import { UserPlus, UserX, Users, UserCheck, Shield, Search } from "lucide-react";
 import {
   Badge,
   Button,
@@ -32,6 +32,7 @@ import {
 } from "@flowdesk/ui";
 import { listMembers, inviteMember, updateMemberRole, revokeMember } from "../../api.js";
 import { useAuth } from "../auth/context.js";
+import { ConfirmDialog } from "../../components/ConfirmDialog.js";
 
 export interface TeamViewProps {
   initialShowInviteModal?: boolean;
@@ -45,6 +46,8 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<RoleKey>("agent");
   const [inviting, setInviting] = useState(false);
+  const [memberToRemove, setMemberToRemove] = useState<{ id: string; name: string } | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   useEffect(() => {
     if (initialShowInviteModal) {
@@ -116,17 +119,21 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
     }
   };
 
-  const handleRevoke = async (memberId: string, displayName: string) => {
+  const handleRevoke = async () => {
+    if (!memberToRemove) return;
     if (!selectedOrgId) return;
-    if (!window.confirm(`Are you sure you want to remove ${displayName} from the team?`)) return;
 
     try {
-      const idempotencyKey = `revoke-${memberId}-${Date.now()}`;
-      await revokeMember(selectedOrgId, memberId, idempotencyKey);
-      showToast(`${displayName} was removed from the team.`);
+      setRemoving(true);
+      const idempotencyKey = `revoke-${memberToRemove.id}-${Date.now()}`;
+      await revokeMember(selectedOrgId, memberToRemove.id, idempotencyKey);
+      showToast(`${memberToRemove.name} was removed from the team.`);
+      setMemberToRemove(null);
       void loadMembers(selectedOrgId);
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to remove member", true);
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -170,12 +177,6 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
           <CardContent className="space-y-3 p-3 sm:space-y-4 sm:p-5">
             <div className="flex items-center justify-between">
               <Users className="text-muted-foreground size-6" />
-              <Badge
-                variant="outline"
-                className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
-              >
-                Team
-              </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm font-medium">Total Members</p>
@@ -191,12 +192,6 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
           <CardContent className="space-y-4 p-5">
             <div className="flex items-center justify-between">
               <UserCheck className="text-muted-foreground size-6" />
-              <Badge
-                variant="outline"
-                className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
-              >
-                Active
-              </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm font-medium">Active Seats</p>
@@ -210,12 +205,6 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
           <CardContent className="space-y-4 p-5">
             <div className="flex items-center justify-between">
               <Shield className="text-muted-foreground size-6" />
-              <Badge
-                variant="outline"
-                className="border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950/20 dark:text-blue-400"
-              >
-                Admin
-              </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm font-medium">Administrators</p>
@@ -229,12 +218,6 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
           <CardContent className="space-y-4 p-5">
             <div className="flex items-center justify-between">
               <UserCheck className="text-muted-foreground size-6" />
-              <Badge
-                variant="outline"
-                className="border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/20 dark:text-purple-400"
-              >
-                Support
-              </Badge>
             </div>
             <div className="space-y-1">
               <p className="text-muted-foreground text-sm font-medium">Agents & Supervisors</p>
@@ -261,7 +244,7 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
               data-testid="invite-member-btn"
               className="cursor-pointer"
             >
-              <Plus className="mr-1.5 size-4" />
+              <UserPlus className="mr-1.5 size-4" />
               Invite Member
             </Button>
           )}
@@ -356,7 +339,7 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
                           variant={member.status === "active" ? "secondary" : "outline"}
                           className={`capitalize text-xs ${
                             member.status === "active"
-                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border-emerald-200"
+                              ? "bg-success/10 text-success border-success/30"
                               : "text-muted-foreground"
                           }`}
                         >
@@ -368,7 +351,9 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => void handleRevoke(member.id, member.displayName)}
+                            onClick={() =>
+                              setMemberToRemove({ id: member.id, name: member.displayName })
+                            }
                             className="h-8 text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                             aria-label={`Remove ${member.displayName}`}
                           >
@@ -444,6 +429,17 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
           </form>
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={memberToRemove !== null}
+        onOpenChange={(open) => {
+          if (!open && !removing) setMemberToRemove(null);
+        }}
+        title={`Remove ${memberToRemove?.name ?? "this member"}?`}
+        description="This member will lose access to the organization and its workspace data."
+        confirmLabel="Remove Member"
+        pending={removing}
+        onConfirm={handleRevoke}
+      />
     </div>
   );
 }

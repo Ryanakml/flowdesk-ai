@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@flowdesk/ui";
 import {
@@ -27,15 +27,15 @@ export interface VolumeDataPoint {
 const chartConfig = {
   inbound: {
     label: "Inbound Messages",
-    color: "#2563eb"
+    color: "var(--primary)"
   },
   outbound: {
     label: "Outbound Messages",
-    color: "#16a34a"
+    color: "var(--success)"
   },
   bot: {
     label: "Bot Automated",
-    color: "#9333ea"
+    color: "var(--destructive)"
   }
 } satisfies ChartConfig;
 
@@ -70,6 +70,7 @@ export function ChartAreaInteractive({
                 <SelectItem value="7">Last 7 days</SelectItem>
                 <SelectItem value="30">Last 30 days</SelectItem>
                 <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="365">Last 12 months</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -77,7 +78,7 @@ export function ChartAreaInteractive({
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full">
-          <AreaChart data={volumeSeries}>
+          <AreaChart data={volumeSeries} margin={{ top: 24, right: 16, left: 8, bottom: 8 }}>
             <defs>
               <linearGradient id="fillInbound" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="var(--color-inbound)" stopOpacity={0.8} />
@@ -93,6 +94,7 @@ export function ChartAreaInteractive({
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} />
+            <YAxis domain={[0, (max: number) => Math.max(1, Math.ceil(max * 1.15))]} hide />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -140,21 +142,21 @@ export function ChartAreaInteractive({
               dataKey="inbound"
               type="natural"
               fill="url(#fillInbound)"
-              stroke="#2563eb"
+              stroke="var(--color-inbound)"
               name="Inbound"
             />
             <Area
               dataKey="outbound"
               type="natural"
               fill="url(#fillOutbound)"
-              stroke="#16a34a"
+              stroke="var(--color-outbound)"
               name="Outbound"
             />
             <Area
               dataKey="bot"
               type="natural"
               fill="url(#fillBot)"
-              stroke="#9333ea"
+              stroke="var(--color-bot)"
               name="Bot Handled"
             />
           </AreaChart>

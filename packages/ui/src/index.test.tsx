@@ -94,12 +94,10 @@ describe("@flowdesk/ui Foundation Primitives", () => {
         <Badge variant="destructive">Destructive</Badge>
         <Badge variant="success">Success</Badge>
         <Badge variant="warning">Warning</Badge>
-        <Badge variant="info">Info</Badge>
       </div>
     );
     expect(screen.getByText("Success")).toBeTruthy();
     expect(screen.getByText("Warning")).toBeTruthy();
-    expect(screen.getByText("Info")).toBeTruthy();
   });
 
   it("Input supports sensitive inputs and accessibility attributes", () => {

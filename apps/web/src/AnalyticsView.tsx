@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@flowdesk/ui";
 import {
@@ -19,6 +19,24 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [timeRange, setTimeRange] = useState<number>(30);
+
+  const tableSeries = useMemo(() => {
+    const series = data?.volumeSeries ?? [];
+    if (timeRange !== 365) return series;
+    const monthly = new Map<
+      string,
+      { date: string; inbound: number; outbound: number; bot: number }
+    >();
+    for (const point of series) {
+      const month = point.date.slice(0, 7);
+      const current = monthly.get(month) ?? { date: month, inbound: 0, outbound: 0, bot: 0 };
+      current.inbound += point.inbound;
+      current.outbound += point.outbound;
+      current.bot += point.bot;
+      monthly.set(month, current);
+    }
+    return Array.from(monthly.values());
+  }, [data?.volumeSeries, timeRange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,7 +78,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      alert(`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      setError(`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setExporting(false);
     }
@@ -99,8 +117,6 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
     avgResolutionTimeSeconds: 0
   };
 
-  const volumeSeries = data?.volumeSeries ?? [];
-
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
       {/* Header */}
@@ -136,7 +152,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
 
       {/* Interactive area chart transplanted from donor dashboard */}
       <ChartAreaInteractive
-        volumeSeries={volumeSeries}
+        volumeSeries={tableSeries}
         timeRange={timeRange}
         onTimeRangeChange={setTimeRange}
       />
@@ -147,43 +163,35 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
           Daily Message Volume & Automation Breakdown
         </h3>
 
-        {volumeSeries.length === 0 ? (
+        {tableSeries.length === 0 ? (
           <p className="text-sm text-muted-foreground italic">
             No message activity recorded for the selected date range.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+          <div className="scrollbar-hidden overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-xs font-semibold uppercase text-muted-foreground">
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Inbound Messages</th>
-                  <th className="px-4 py-3">Outbound Messages</th>
-                  <th className="px-4 py-3">Bot Handled</th>
-                  <th className="px-4 py-3">Automation Share</th>
+                  <th className="px-4 py-3 text-left">Date</th>
+                  <th className="px-4 py-3 text-center">Inbound</th>
+                  <th className="px-4 py-3 text-center">Outbound</th>
+                  <th className="px-4 py-3 text-center">Bot Handled</th>
+                  <th className="px-4 py-3 text-center">Automation Share</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {volumeSeries.map((pt) => {
+                {tableSeries.map((pt) => {
                   const dayTotal = pt.inbound + pt.outbound;
                   const share = dayTotal > 0 ? Math.round((pt.bot / dayTotal) * 100) : 0;
                   return (
                     <tr key={pt.date} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground">{pt.date}</td>
-                      <td className="px-4 py-3 text-blue-600 dark:text-blue-400 font-mono">
-                        {pt.inbound}
-                      </td>
-                      <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-mono">
+                      <td className="px-4 py-3 text-center font-mono text-primary">{pt.inbound}</td>
+                      <td className="px-4 py-3 text-center font-mono text-success">
                         {pt.outbound}
                       </td>
-                      <td className="px-4 py-3 text-purple-600 dark:text-purple-400 font-mono">
-                        {pt.bot}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-foreground">
-                          {share}%
-                        </span>
-                      </td>
+                      <td className="px-4 py-3 text-center font-mono text-destructive">{pt.bot}</td>
+                      <td className="px-4 py-3 text-center font-mono text-foreground">{share}%</td>
                     </tr>
                   );
                 })}

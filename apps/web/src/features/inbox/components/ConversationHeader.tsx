@@ -1,5 +1,5 @@
 import type { Conversation } from "@flowdesk/contracts";
-import { cn } from "@flowdesk/ui";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 
 interface ConversationHeaderProps {
   conversation: Conversation;
@@ -7,6 +7,8 @@ interface ConversationHeaderProps {
   canAssign: boolean;
   canResolve: boolean;
   onAssignToMe: () => void;
+  contextCollapsed?: boolean;
+  onToggleContext?: () => void;
   onResolve: () => void;
   onReopen: () => void;
 }
@@ -17,6 +19,8 @@ export function ConversationHeader({
   canAssign,
   canResolve,
   onAssignToMe,
+  contextCollapsed = false,
+  onToggleContext,
   onResolve,
   onReopen
 }: ConversationHeaderProps) {
@@ -25,86 +29,60 @@ export function ConversationHeader({
   const isAssignedToMe = conv.assignedToUserId === sessionUserId;
 
   return (
-    <header className="thread-header flex items-center justify-between px-4 py-3 border-b border-border bg-background flex-shrink-0">
-      {/* Customer info */}
-      <div className="thread-customer-info min-w-0 flex-1">
-        <h3 className="text-sm font-semibold text-foreground truncate">
+    <header className="flex shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-sm font-semibold text-foreground">
           {conv.customerName ?? `+${conv.customerPhone}`}
         </h3>
-        <div className="thread-sub-info flex items-center flex-wrap gap-1.5 mt-0.5">
-          <span className="text-xs text-muted-foreground">+{conv.customerPhone}</span>
-          <span className="text-muted-foreground/40">•</span>
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-            WhatsApp Cloud
-          </span>
-          <span
-            className={cn(
-              "inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium",
-              `badge-status badge-${conv.status}`,
-              conv.status === "open" &&
-                "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
-              conv.status === "pending" &&
-                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-              conv.status === "resolved" &&
-                "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
-              conv.status === "closed" &&
-                "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
-              conv.status === "new" &&
-                "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
-            )}
-          >
-            {conv.status}
-          </span>
-          {/* Service window badge */}
-          {conv.serviceWindow &&
-            (conv.serviceWindow.isOpen ? (
-              <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                data-testid="service-window-badge"
-                title={`Customer service window open. Expires: ${conv.serviceWindow.expiresAt ? new Date(conv.serviceWindow.expiresAt).toLocaleTimeString() : "in 24h"}`}
-              >
-                ⏱️ 24h Window Active
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
-                data-testid="service-window-badge"
-                title="24h service window expired. Freeform messaging blocked."
-              >
-                ⚠️ 24h Window Expired
-              </span>
-            ))}
+        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span>+{conv.customerPhone}</span>
+          <span aria-hidden="true">•</span>
+          <span>WhatsApp Cloud</span>
+          <span aria-hidden="true">•</span>
+          <span className="capitalize">{conv.status}</span>
         </div>
       </div>
-
-      {/* Action Buttons */}
-      <div className="thread-actions ml-2 flex max-w-[48%] flex-shrink-0 flex-wrap items-center justify-end gap-1.5 sm:ml-3 sm:max-w-none sm:gap-2">
+      <div className="ml-2 flex max-w-[56%] shrink-0 flex-wrap items-center justify-end gap-1.5 sm:ml-3 sm:gap-2">
         {!isAssignedToMe && canAssign && (
           <button
             type="button"
-            className="px-2.5 py-1.5 text-xs rounded border border-border hover:bg-muted transition-colors"
+            className="rounded border border-border px-2.5 py-1.5 text-xs hover:bg-muted"
             onClick={onAssignToMe}
             data-testid="btn-assign-me"
           >
             Assign to Me
           </button>
         )}
-
+        {onToggleContext && (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded border border-border px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+            onClick={onToggleContext}
+            aria-label={contextCollapsed ? "Expand context panel" : "Collapse context panel"}
+            data-testid="context-panel-toggle"
+          >
+            {contextCollapsed ? (
+              <PanelRightOpen className="size-3.5" />
+            ) : (
+              <PanelRightClose className="size-3.5" />
+            )}
+            <span className="hidden xl:inline">{contextCollapsed ? "Context" : "Collapse"}</span>
+          </button>
+        )}
         {canResolve && isOpen && (
           <button
             type="button"
-            className="px-2.5 py-1.5 text-xs rounded bg-green-600 text-white hover:bg-green-700 transition-colors"
+            className="rounded bg-primary px-2.5 py-1.5 text-xs text-primary-foreground hover:bg-primary/90"
             onClick={onResolve}
             data-testid="btn-resolve"
           >
             Resolve
           </button>
         )}
-
         {canResolve && isResolved && (
           <button
             type="button"
-            className="px-2.5 py-1.5 text-xs rounded border border-border hover:bg-muted transition-colors"
+            className="rounded border border-border px-2.5 py-1.5 text-xs hover:bg-muted"
             onClick={onReopen}
             data-testid="btn-reopen"
           >

@@ -21,6 +21,7 @@ export type AppRoutePath =
   | "/developer/api-keys"
   | "/developer/webhooks"
   | "/audit"
+  | "/profile"
   | "/settings/workspace";
 
 export interface NavItem {

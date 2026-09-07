@@ -44,7 +44,7 @@ export function CustomerContextPanel({
 }: CustomerContextPanelProps) {
   if (loading) {
     return (
-      <div className="h-full overflow-y-auto p-4 space-y-4 bg-background border-l border-border">
+      <div className="scrollbar-hidden h-full overflow-y-auto p-4 space-y-4 bg-background border-l border-border">
         <Skeleton className="h-4 w-2/3" />
         <Skeleton className="h-3 w-1/2" />
         <Skeleton className="h-16 w-full rounded" />
@@ -61,7 +61,7 @@ export function CustomerContextPanel({
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-background border-l border-border">
+    <div className="scrollbar-hidden h-full overflow-y-auto bg-background border-l border-border">
       {/* Customer Profile */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2 mb-3">
@@ -83,12 +83,7 @@ export function CustomerContextPanel({
             <Phone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
             <span className="text-xs text-foreground">+{conv.customerPhone}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 text-xs">📱</span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
-              WhatsApp
-            </span>
-          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">WhatsApp</div>
         </div>
       </div>
 
@@ -100,11 +95,7 @@ export function CustomerContextPanel({
 
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Status</span>
-          <span
-            className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium badge-status badge-${conv.status}`}
-          >
-            {conv.status}
-          </span>
+          <span className="text-xs font-medium capitalize text-foreground">{conv.status}</span>
         </div>
 
         {conv.assignedToUserId ? (
@@ -134,15 +125,39 @@ export function CustomerContextPanel({
           <span className="text-xs text-muted-foreground">Last message</span>
           <span className="text-xs text-foreground">{formatDate(conv.lastMessageAt)}</span>
         </div>
+      </div>
 
-        {conv.serviceWindow && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Service window</span>
-            <span
-              className={`text-xs font-medium ${conv.serviceWindow.isOpen ? "text-green-600 dark:text-green-400" : "text-orange-600 dark:text-orange-400"}`}
-            >
-              {conv.serviceWindow.isOpen ? "Active" : "Expired"}
-            </span>
+      <div className="space-y-2 border-b border-border p-4">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Automation
+        </h4>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Mode</span>
+          <span className="font-medium text-foreground">{conv.botPaused ? "Paused" : "Auto"}</span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-muted-foreground">Service window</span>
+          <span
+            className={
+              conv.serviceWindow?.isOpen === false
+                ? "font-medium text-warning-foreground"
+                : "font-medium text-success"
+            }
+          >
+            {conv.serviceWindow
+              ? conv.serviceWindow.isOpen
+                ? "Open"
+                : "Expired"
+              : "Not available"}
+          </span>
+        </div>
+        {conv.serviceWindow?.isOpen === false && (
+          <div className="space-y-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-xs">
+            <p className="font-medium text-foreground">24-hour window expired</p>
+            <p className="text-muted-foreground">
+              Free-form messages are unavailable until the customer messages again or an approved
+              template is sent.
+            </p>
           </div>
         )}
       </div>
@@ -248,7 +263,7 @@ export function CustomerContextPanel({
             {notes.map((note: NonNullable<ConversationDetailResponse["notes"]>[number]) => (
               <li
                 key={note.id}
-                className="text-xs text-foreground bg-yellow-50 dark:bg-yellow-950/20 rounded p-2 border border-yellow-200 dark:border-yellow-900"
+                className="text-xs text-foreground bg-warning/10 rounded p-2 border border-warning/30"
               >
                 {note.body}
               </li>

@@ -260,7 +260,7 @@ export function KnowledgeView({ orgId, canManage, showToast }: KnowledgeViewProp
               </div>
 
               {selectedMode === "auto" && !botConfig.emergencyDisabled && (
-                <p role="alert" className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                <p role="alert" className="text-xs text-warning-foreground font-medium">
                   AUTO is opt-in. Low-confidence, stale, paused, assigned, disabled, or
                   out-of-window conversations remain blocked.
                 </p>

@@ -1,6 +1,16 @@
 import type { GenerateBotDraftResponse } from "@flowdesk/contracts";
-import { cn } from "@flowdesk/ui";
-import { Sparkles } from "lucide-react";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  cn
+} from "@flowdesk/ui";
+import { RefreshCw, Send, Sparkles } from "lucide-react";
+import { MarkdownContent } from "./MarkdownContent.js";
 
 interface ConfidenceMeterProps {
   value: number;
@@ -10,35 +20,23 @@ function ConfidenceMeter({ value }: ConfidenceMeterProps) {
   const pct = Math.round(value * 100);
   const level = pct >= 75 ? "high" : pct >= 50 ? "medium" : "low";
   const barColor =
-    level === "high" ? "bg-green-500" : level === "medium" ? "bg-yellow-500" : "bg-red-500";
+    level === "high" ? "bg-success" : level === "medium" ? "bg-warning" : "bg-destructive";
   const textColor =
     level === "high"
-      ? "text-green-600 dark:text-green-400"
+      ? "text-success"
       : level === "medium"
-        ? "text-yellow-600 dark:text-yellow-400"
-        : "text-red-600 dark:text-red-400";
+        ? "text-warning-foreground"
+        : "text-destructive";
 
   return (
-    <div className="copilot-confidence flex items-center gap-2" aria-label={`Confidence ${pct}%`}>
-      <div className="copilot-confidence-bar-track flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+    <div className="flex items-center gap-2" aria-label={`Confidence ${pct}%`}>
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
         <div
-          className={cn(
-            "copilot-confidence-bar-fill h-full rounded-full transition-all",
-            barColor,
-            `confidence-${level}`
-          )}
+          className={cn("h-full rounded-full transition-all", barColor)}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <span
-        className={cn(
-          `copilot-confidence-pct confidence-${level}`,
-          "text-xs font-medium w-8 text-right",
-          textColor
-        )}
-      >
-        {pct}%
-      </span>
+      <span className={cn("w-8 text-right text-xs font-medium", textColor)}>{pct}%</span>
     </div>
   );
 }
@@ -50,6 +48,8 @@ interface AiDraftCardProps {
   showCitations: boolean;
   isApproving: boolean;
   canSend: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onGenerate: () => void;
   onApprove: () => void;
   onEdit: () => void;
@@ -73,6 +73,8 @@ export function AiDraftCard({
   showCitations,
   isApproving,
   canSend,
+  open = true,
+  onOpenChange,
   onGenerate,
   onApprove,
   onEdit,
@@ -80,9 +82,7 @@ export function AiDraftCard({
   onToggleCitations
 }: AiDraftCardProps) {
   const hasDraft = draft.status === "drafted" && draft.sendable;
-  const isOff = draft.status === "off";
   const isFallback = FALLBACK_STATUSES.includes(draft.status as (typeof FALLBACK_STATUSES)[number]);
-
   const fallbackMessage =
     draft.status === "safety_blocked"
       ? "Draft blocked by safety filter."
@@ -93,198 +93,134 @@ export function AiDraftCard({
           : draft.status === "stale" || draft.status === "cancelled"
             ? "Draft is stale. Generate a new one."
             : "No relevant knowledge found for this conversation.";
+  const handleOpenChange = onOpenChange ?? (() => {});
 
   return (
-    <section
-      className="copilot-panel min-w-0 border-t border-border bg-muted/30 px-3 py-2 sm:px-4 sm:py-3"
-      aria-label="AI Copilot"
-      data-testid="copilot-panel"
-    >
-      <div className="copilot-header flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
-          <span className="copilot-label text-xs font-semibold text-foreground">AI Copilot</span>
-        </div>
-        <div className="flex gap-1">
-          {!loading && !hasDraft && !error && (
-            <button
-              type="button"
-              className="btn btn-sm btn-copilot-generate px-2 py-1 text-xs rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-              onClick={onGenerate}
-              disabled={loading}
-              data-testid="copilot-generate-btn"
-              aria-label="✨ Generate Draft"
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto scrollbar-hidden sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="size-4 text-primary" />
+            AI Draft
+          </DialogTitle>
+          <DialogDescription>
+            Review the generated response and the knowledge used before sending.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4" data-testid="copilot-panel">
+          {loading && (
+            <div
+              className="flex items-center gap-2 text-sm text-muted-foreground"
+              data-testid="copilot-loading"
             >
-              ✨ Generate Draft
-            </button>
-          )}
-          {hasDraft && (
-            <button
-              type="button"
-              className="btn btn-sm btn-ghost copilot-refresh-btn p-1 rounded hover:bg-muted transition-colors text-muted-foreground"
-              onClick={onGenerate}
-              disabled={loading || isApproving}
-              title="Regenerate draft"
-              aria-label="Regenerate draft"
-              data-testid="copilot-refresh-btn"
-            >
-              🔄
-            </button>
-          )}
-        </div>
-      </div>
-
-      {loading && (
-        <div className="copilot-loading flex items-center gap-2 py-2" data-testid="copilot-loading">
-          <span className="inline-block w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-muted-foreground">Generating draft…</span>
-        </div>
-      )}
-
-      {error && !loading && (
-        <div
-          className="copilot-error flex items-center justify-between py-1"
-          role="alert"
-          data-testid="copilot-error"
-        >
-          <span className="text-xs text-destructive">⚠️ AI draft error</span>
-          <button
-            type="button"
-            className="text-xs text-primary hover:underline"
-            onClick={onGenerate}
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && isOff && (
-        <p className="copilot-off-msg text-xs text-muted-foreground py-1" data-testid="copilot-off">
-          AI Copilot is off for this conversation.
-        </p>
-      )}
-
-      {!loading && !error && isFallback && (
-        <p
-          className="copilot-fallback-msg text-xs text-muted-foreground py-1"
-          data-testid="copilot-fallback"
-        >
-          {fallbackMessage}
-        </p>
-      )}
-
-      {!loading && !error && hasDraft && !isFallback && !isOff && (
-        <div className="copilot-draft-card" data-testid="copilot-draft-card">
-          {/* Confidence */}
-          <div className="copilot-draft-meta flex items-center gap-2 mb-2">
-            <span className="copilot-meta-label text-xs text-muted-foreground">Confidence</span>
-            <div className="flex-1">
-              <ConfidenceMeter value={draft.confidence} />
+              <span className="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Generating draft…
             </div>
-          </div>
-
-          {/* Draft text */}
-          <div className="copilot-draft-body mb-2">
-            <p
-              className="copilot-draft-text max-h-20 overflow-y-auto break-words rounded border border-border bg-background px-2.5 py-1.5 text-xs text-foreground whitespace-pre-wrap sm:max-h-28 sm:px-2.5 sm:py-2 sm:text-sm"
-              data-testid="copilot-draft-text"
-            >
-              {draft.suggestedContent}
-            </p>
-          </div>
-
-          {/* Reasoning */}
-          {draft.reasoning && (
-            <details className="copilot-reasoning mb-2">
-              <summary className="copilot-reasoning-summary text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                Reasoning
-              </summary>
-              <p className="copilot-reasoning-text text-xs text-muted-foreground mt-1 pl-2">
-                {draft.reasoning}
-              </p>
-            </details>
           )}
-
-          {/* Citations */}
-          {draft.citations.length > 0 && (
-            <div className="copilot-citations-section mb-2">
-              <button
-                type="button"
-                className="btn btn-sm btn-ghost copilot-citations-toggle text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-                onClick={onToggleCitations}
-                aria-expanded={showCitations}
-                data-testid="copilot-citations-toggle"
+          {error && !loading && (
+            <div
+              className="flex items-center justify-between text-sm text-destructive"
+              role="alert"
+              data-testid="copilot-error"
+            >
+              <span>AI draft error</span>
+              <Button type="button" variant="link" size="sm" onClick={onGenerate}>
+                Retry
+              </Button>
+            </div>
+          )}
+          {!loading && !error && isFallback && (
+            <p className="text-sm text-muted-foreground" data-testid="copilot-fallback">
+              {fallbackMessage}
+            </p>
+          )}
+          {!loading && !error && hasDraft && !isFallback && (
+            <div className="space-y-4" data-testid="copilot-draft-card">
+              <div>
+                <p className="mb-1 text-xs font-medium text-muted-foreground">Confidence</p>
+                <ConfidenceMeter value={draft.confidence} />
+              </div>
+              <div
+                className="rounded-md border border-border bg-muted/30 p-3 text-sm"
+                data-testid="copilot-draft-text"
               >
-                📚 Citations ({draft.citations.length})
-                <span aria-hidden="true">{showCitations ? " ▲" : " ▼"}</span>
-              </button>
-              {showCitations && (
-                <ul
-                  className="copilot-citations-list mt-1.5 space-y-1.5"
-                  aria-label="Citations"
-                  data-testid="copilot-citations-list"
-                >
-                  {draft.citations.map((cit, idx) => (
-                    <li key={cit.chunkId} className="copilot-citation-item flex gap-2 text-xs">
-                      <span className="citation-index text-muted-foreground font-medium flex-shrink-0">
-                        {idx + 1}.
-                      </span>
-                      <div className="citation-content">
-                        <p className="citation-title font-medium text-foreground">
-                          {cit.documentTitle}
-                        </p>
-                        <blockquote className="citation-snippet text-muted-foreground border-l-2 border-border pl-2 my-0.5 italic">
-                          {cit.snippet}
-                        </blockquote>
-                        <span className="citation-score text-muted-foreground">
-                          {Math.round(cit.score * 100)}% match
-                        </span>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <MarkdownContent content={draft.suggestedContent} className="break-words" />
+              </div>
+              {draft.reasoning && (
+                <p className="text-xs text-muted-foreground">{draft.reasoning}</p>
+              )}
+              {draft.citations.length > 0 && (
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto px-0 text-xs"
+                    onClick={onToggleCitations}
+                    aria-expanded={showCitations}
+                    data-testid="copilot-citations-toggle"
+                  >
+                    Sources / knowledge used ({draft.citations.length})
+                  </Button>
+                  {showCitations && (
+                    <ul
+                      className="space-y-2 rounded-md border border-border p-3 text-xs"
+                      data-testid="copilot-citations-list"
+                    >
+                      {draft.citations.map((citation, index) => (
+                        <li key={citation.chunkId}>
+                          <p className="font-medium text-foreground">
+                            {index + 1}. {citation.documentTitle}
+                          </p>
+                          <p className="text-muted-foreground">{citation.snippet}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               )}
             </div>
           )}
-
-          {/* Actions */}
-          <div
-            className="copilot-actions flex flex-wrap items-center gap-1.5"
-            role="group"
-            aria-label="Copilot draft actions"
+        </div>
+        <DialogFooter className="flex-wrap sm:justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onGenerate}
+            disabled={loading || isApproving}
           >
-            {canSend && draft.sendable && (
-              <button
-                type="button"
-                className="btn btn-sm btn-copilot-approve px-2.5 py-1 text-xs rounded bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50"
-                onClick={onApprove}
-                disabled={isApproving}
-                data-testid="copilot-approve-btn"
-              >
-                {isApproving ? "Sending…" : "✅ Approve & Send"}
-              </button>
-            )}
-            <button
+            <RefreshCw className="size-4" />
+            Regenerate
+          </Button>
+          <div className="flex gap-2">
+            <Button
               type="button"
-              className="px-2.5 py-1 text-xs rounded border border-border hover:bg-muted transition-colors disabled:opacity-50"
+              variant="outline"
               onClick={onEdit}
-              disabled={isApproving}
+              disabled={!hasDraft || isApproving}
               data-testid="copilot-edit-btn"
             >
-              ✏️ Edit
-            </button>
-            <button
-              type="button"
-              className="btn btn-sm btn-ghost copilot-reject-btn px-2 py-1 text-xs rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-              onClick={onReject}
-              disabled={isApproving}
-              data-testid="copilot-reject-btn"
-            >
-              ✕ Discard
-            </button>
+              Edit Draft
+            </Button>
+            {canSend && (
+              <Button
+                type="button"
+                onClick={onApprove}
+                disabled={!hasDraft || isApproving}
+                data-testid="copilot-approve-btn"
+              >
+                <Send className="size-4" />
+                {isApproving ? "Sending…" : "Send"}
+              </Button>
+            )}
+            {!canSend && (
+              <Button type="button" variant="ghost" onClick={onReject} disabled={isApproving}>
+                Close
+              </Button>
+            )}
           </div>
-        </div>
-      )}
-    </section>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

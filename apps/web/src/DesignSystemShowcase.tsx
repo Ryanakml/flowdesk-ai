@@ -172,7 +172,6 @@ export function DesignSystemShowcase() {
                 <Badge variant="success">Success</Badge>
                 <Badge variant="warning">Warning</Badge>
                 <Badge variant="destructive">Destructive</Badge>
-                <Badge variant="info">Info</Badge>
               </div>
               <Separator />
               <div className="flex items-center gap-4">

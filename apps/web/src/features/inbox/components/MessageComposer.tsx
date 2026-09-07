@@ -1,6 +1,6 @@
 import { useRef, useId } from "react";
 import { cn, Button } from "@flowdesk/ui";
-import { Send, Paperclip, Layout } from "lucide-react";
+import { Send, Paperclip, Layout, Sparkles } from "lucide-react";
 
 type ConnectionState = "connecting" | "connected" | "reconnecting" | "offline";
 
@@ -15,6 +15,7 @@ interface MessageComposerProps {
   onComposerChange: (text: string) => void;
   onSend: () => void;
   onOpenTemplate: () => void;
+  onGenerateDraft?: () => void;
   onMediaSelected: (file: File | undefined) => void;
 }
 
@@ -29,6 +30,7 @@ export function MessageComposer({
   onComposerChange,
   onSend,
   onOpenTemplate,
+  onGenerateDraft = () => {},
   onMediaSelected
 }: MessageComposerProps) {
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -74,25 +76,42 @@ export function MessageComposer({
 
   if (isWindowExpired) {
     return (
-      <div
-        className="composer-window-expired-banner flex items-center justify-between gap-2 border-t border-border bg-orange-50 px-3 py-2 dark:bg-orange-950/20 sm:gap-3 sm:px-4 sm:py-3"
+      <footer
+        className="border-t border-border bg-background"
         data-testid="composer-window-expired"
       >
-        <div className="banner-text min-w-0 text-xs text-muted-foreground sm:text-sm">
-          <strong className="text-foreground">24-hour service window expired.</strong> Free-form
-          messaging is blocked by WhatsApp policy. You must use an approved template to contact this
-          customer.
-        </div>
-        <Button
-          type="button"
-          size="sm"
-          onClick={onOpenTemplate}
-          data-testid="btn-open-template-composer"
-          className="flex-shrink-0 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:px-3 sm:py-1.5 sm:text-xs"
+        <form
+          className="flex flex-col gap-2 px-3 py-2"
+          onSubmit={(event) => event.preventDefault()}
         >
-          📋 Select WhatsApp Template
-        </Button>
-      </div>
+          <textarea
+            className="min-h-[64px] w-full resize-none rounded-md border border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground"
+            placeholder="Messaging unavailable — 24h window expired"
+            disabled
+            aria-label="Reply message"
+          />
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenTemplate}
+              data-testid="btn-open-template-composer"
+            >
+              <Layout className="size-3.5" />
+              Select WhatsApp Template
+            </Button>
+            <Button type="button" size="sm" disabled aria-label="Generate Draft">
+              <Sparkles className="size-3.5" />
+              Draft
+            </Button>
+            <Button type="button" size="sm" disabled data-testid="composer-send-btn">
+              <Send className="size-3.5" />
+              Send
+            </Button>
+          </div>
+        </form>
+      </footer>
     );
   }
 
@@ -173,6 +192,18 @@ export function MessageComposer({
           </Button>
 
           <div className="flex-1" />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onGenerateDraft}
+            disabled={isSending}
+            data-testid="composer-generate-draft-btn"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            Draft
+          </Button>
 
           {/* Send button */}
           <Button

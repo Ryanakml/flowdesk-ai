@@ -13,12 +13,26 @@ import {
 
 interface OrgSwitcherProps {
   collapsed?: boolean;
+  compact?: boolean;
 }
 
-export function OrgSwitcher({ collapsed = false }: OrgSwitcherProps) {
+export function OrgSwitcher({ collapsed = false, compact = false }: OrgSwitcherProps) {
   const { organizations, selectedOrgId, activeOrg, currentRole, setSelectedOrgId } = useAuth();
 
   if (organizations.length <= 1) {
+    if (compact) {
+      return (
+        <div
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30 text-xs font-semibold text-foreground"
+          id="active-org-badge"
+          data-testid="active-org-badge"
+          title={activeOrg?.name ?? "Workspace"}
+        >
+          {(activeOrg?.name ?? "W").slice(0, 1).toUpperCase()}
+          <span className="sr-only">{activeOrg?.name ?? "Workspace"}</span>
+        </div>
+      );
+    }
     return (
       <div
         className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border/60 bg-muted/30 text-sm font-medium text-foreground w-full"
@@ -58,7 +72,7 @@ export function OrgSwitcher({ collapsed = false }: OrgSwitcherProps) {
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
               <Building2 className="h-3.5 w-3.5" />
             </div>
-            {!collapsed && (
+            {(!collapsed || compact) && (
               <div className="flex flex-col min-w-0 text-left">
                 <span className="truncate text-xs font-semibold text-foreground">
                   {activeOrg?.name}
@@ -69,7 +83,9 @@ export function OrgSwitcher({ collapsed = false }: OrgSwitcherProps) {
               </div>
             )}
           </div>
-          {!collapsed && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />}
+          {(!collapsed || compact) && (
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">

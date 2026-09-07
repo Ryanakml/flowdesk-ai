@@ -1,10 +1,12 @@
 import type { Message } from "@flowdesk/contracts";
 import { cn } from "@flowdesk/ui";
+import { MarkdownContent } from "./MarkdownContent.js";
 
 type AuthorType = "customer" | "agent" | "system" | "ai-draft";
 
 interface MessageBubbleProps {
   message: Message;
+  grouped?: boolean;
   onRetry?: (content: string) => void;
   onRemove?: () => void;
 }
@@ -83,7 +85,12 @@ function formatTime(isoString: string): string {
   }
 }
 
-export function MessageBubble({ message: msg, onRetry, onRemove }: MessageBubbleProps) {
+export function MessageBubble({
+  message: msg,
+  grouped = false,
+  onRetry,
+  onRemove
+}: MessageBubbleProps) {
   const authorType = getAuthorType(msg);
   const isInbound = authorType === "customer";
   const isSystem = authorType === "system";
@@ -101,7 +108,8 @@ export function MessageBubble({ message: msg, onRetry, onRemove }: MessageBubble
   return (
     <div
       className={cn(
-        "flex w-full min-w-0 mb-2",
+        "flex w-full min-w-0",
+        grouped ? "mb-1" : "mb-3",
         "message-bubble-wrapper",
         isInbound ? "justify-start inbound" : "justify-end outbound"
       )}
@@ -117,12 +125,12 @@ export function MessageBubble({ message: msg, onRetry, onRemove }: MessageBubble
           className={cn(
             "message-bubble w-fit max-w-full px-3.5 py-2 rounded-2xl text-sm shadow-xs",
             isInbound
-              ? "bg-muted text-foreground rounded-tl-xs shadow-sm"
-              : "bg-emerald-600 text-white shadow-sm dark:bg-emerald-700"
+              ? cn("bg-muted text-foreground rounded-tl-xs shadow-sm", grouped && "rounded-tl-md")
+              : cn("bg-primary text-primary-foreground shadow-sm", grouped && "rounded-tr-md")
           )}
         >
-          <div className="message-text min-w-0 whitespace-pre-wrap break-words leading-relaxed">
-            {msg.content}
+          <div className="message-text min-w-0 break-words leading-relaxed">
+            <MarkdownContent content={msg.content} />
           </div>
           <div
             className={cn(
