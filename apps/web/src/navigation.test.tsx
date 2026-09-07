@@ -464,6 +464,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
     );
 
     render(<App />);
+    await router.navigate({ to: "/inbox" });
     expect(await screen.findByText("Sign in with SSO / OIDC")).toBeTruthy();
     expect(document.querySelector("#login-button")).toBeTruthy();
     expect(screen.getByText("AI-first customer operations platform")).toBeTruthy();

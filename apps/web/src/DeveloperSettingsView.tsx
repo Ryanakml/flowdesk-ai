@@ -271,7 +271,7 @@ export function DeveloperSettingsView({
 
   return (
     <div
-      className="developer-settings-container mx-auto max-w-6xl space-y-6 p-4 md:p-8"
+      className="developer-settings-container mx-auto min-w-0 max-w-6xl space-y-6 overflow-hidden p-4 md:p-8"
       data-testid="developer-settings-view"
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -284,11 +284,11 @@ export function DeveloperSettingsView({
             Manage scoped API keys and outbound webhook subscriptions for programmatic integrations.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2 sm:w-auto">
           <Button
             type="button"
             variant={activeTab === "keys" ? "default" : "outline"}
-            className="cursor-pointer inline-flex items-center gap-1.5"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 sm:flex-none"
             onClick={() => {
               setActiveTab("keys");
               onTabChange?.("keys");
@@ -300,7 +300,7 @@ export function DeveloperSettingsView({
           <Button
             type="button"
             variant={activeTab === "webhooks" ? "default" : "outline"}
-            className="cursor-pointer inline-flex items-center gap-1.5"
+            className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 sm:flex-none"
             onClick={() => {
               setActiveTab("webhooks");
               onTabChange?.("webhooks");
@@ -332,15 +332,15 @@ export function DeveloperSettingsView({
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <code className="p-2.5 bg-background border rounded-md font-mono text-xs break-all flex-1 text-foreground shadow-xs">
+            <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+              <code className="min-w-0 flex-1 break-all rounded-md border bg-background p-2.5 font-mono text-xs text-foreground shadow-xs">
                 {generatedRawKey}
               </code>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="inline-flex items-center gap-1 cursor-pointer"
+                className="inline-flex shrink-0 items-center justify-center gap-1 cursor-pointer"
                 onClick={() => {
                   void navigator.clipboard.writeText(generatedRawKey);
                   showToast?.("Copied to clipboard!", "info");
@@ -375,15 +375,15 @@ export function DeveloperSettingsView({
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <code className="p-2.5 bg-background border rounded-md font-mono text-xs break-all flex-1 text-foreground shadow-xs">
+            <div className="flex min-w-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+              <code className="min-w-0 flex-1 break-all rounded-md border bg-background p-2.5 font-mono text-xs text-foreground shadow-xs">
                 {generatedWebhookSecret.secret}
               </code>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="inline-flex items-center gap-1 cursor-pointer"
+                className="inline-flex shrink-0 items-center justify-center gap-1 cursor-pointer"
                 onClick={() => {
                   void navigator.clipboard.writeText(generatedWebhookSecret.secret);
                   showToast?.("Webhook signing secret copied", "info");
@@ -399,7 +399,7 @@ export function DeveloperSettingsView({
 
       {activeTab === "keys" && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-semibold text-foreground">Scoped API Keys</h3>
             {canManage && (
               <Button
@@ -440,47 +440,49 @@ export function DeveloperSettingsView({
           ) : (
             <div className="space-y-3">
               {keys.map((key) => (
-                <Card key={key.id} className="border-border p-4 flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground">{key.name}</h4>
-                      <Badge
-                        variant={key.revokedAt ? "destructive" : "default"}
-                        className={
-                          key.revokedAt
-                            ? "bg-destructive/15 text-destructive border-destructive/20"
-                            : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                        }
-                      >
-                        {key.revokedAt ? "REVOKED" : "ACTIVE"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground font-mono mb-2">
-                      Prefix: {key.keyPrefix}••••••••
-                    </p>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {key.scopes.map((scope) => (
+                <Card key={key.id} className="min-w-0 border-border p-4">
+                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="mb-1 flex items-center gap-2">
+                        <h4 className="min-w-0 break-words font-semibold text-foreground">
+                          {key.name}
+                        </h4>
                         <Badge
-                          key={scope}
-                          variant="outline"
-                          className="text-xs font-mono bg-muted/50"
+                          variant={key.revokedAt ? "destructive" : "default"}
+                          className={
+                            key.revokedAt
+                              ? "border-destructive/20 bg-destructive/15 text-destructive"
+                              : "border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                          }
                         >
-                          {scope}
+                          {key.revokedAt ? "REVOKED" : "ACTIVE"}
                         </Badge>
-                      ))}
+                      </div>
+                      <p className="mb-2 break-all text-xs font-mono text-muted-foreground">
+                        Prefix: {key.keyPrefix}••••••••
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {key.scopes.map((scope) => (
+                          <Badge
+                            key={scope}
+                            variant="outline"
+                            className="bg-muted/50 text-xs font-mono"
+                          >
+                            {scope}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
+                    {canManage && !key.revokedAt && (
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm shrink-0 self-start text-destructive hover:bg-destructive/10 cursor-pointer"
+                        onClick={() => void handleRevokeKey(key.id)}
+                      >
+                        Revoke Key
+                      </button>
+                    )}
                   </div>
-                  {canManage && !key.revokedAt && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:bg-destructive/10 cursor-pointer"
-                      onClick={() => void handleRevokeKey(key.id)}
-                    >
-                      Revoke Key
-                    </Button>
-                  )}
                 </Card>
               ))}
             </div>
@@ -490,7 +492,7 @@ export function DeveloperSettingsView({
 
       {activeTab === "webhooks" && (
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h3 className="text-lg font-semibold text-foreground">
               Outbound Webhook Subscriptions
             </h3>
@@ -539,11 +541,13 @@ export function DeveloperSettingsView({
                 const deliveries = deliveriesByWebhook[webhook.id] ?? [];
                 const expanded = expandedWebhookId === webhook.id;
                 return (
-                  <Card key={webhook.id} className="border-border p-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <div>
+                  <Card key={webhook.id} className="min-w-0 overflow-hidden border-border p-4">
+                    <div className="flex min-w-0 flex-col items-stretch gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1 overflow-hidden">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold text-foreground">{webhook.name}</h4>
+                          <h4 className="min-w-0 break-words font-semibold text-foreground">
+                            {webhook.name}
+                          </h4>
                           <span
                             className={`px-2 py-0.5 text-xs font-medium rounded-full ${verificationBadgeClass(
                               verificationStatus
@@ -552,7 +556,7 @@ export function DeveloperSettingsView({
                             {verificationStatus.toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground font-mono mb-1">
+                        <p className="mb-1 break-all text-xs font-mono text-muted-foreground">
                           {webhook.url}
                         </p>
                         <p className="text-xs text-muted-foreground mb-2">
@@ -568,12 +572,12 @@ export function DeveloperSettingsView({
                               variant="outline"
                               className="text-xs font-mono bg-primary/5 text-primary border-primary/20"
                             >
-                              {eventName}
+                              <span className="break-all">{eventName}</span>
                             </Badge>
                           ))}
                         </div>
                       </div>
-                      <div className="flex gap-2 flex-wrap justify-end">
+                      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:max-w-[46%]">
                         {canManage && (
                           <Button
                             type="button"
@@ -622,26 +626,26 @@ export function DeveloperSettingsView({
                         ) : deliveries.length === 0 ? (
                           <p className="text-xs text-muted-foreground">No delivery attempts yet.</p>
                         ) : (
-                          <div className="space-y-2">
+                          <div className="min-w-0 space-y-2">
                             {deliveries.map((delivery) => (
                               <div
                                 key={delivery.id}
-                                className="flex justify-between gap-4 text-xs border border-border rounded p-2.5 bg-muted/20"
+                                className="flex min-w-0 flex-col justify-between gap-3 overflow-hidden rounded border border-border bg-muted/20 p-2.5 text-xs sm:flex-row"
                               >
-                                <div>
-                                  <div className="font-mono font-medium text-foreground">
+                                <div className="min-w-0 break-all">
+                                  <div className="break-all font-mono font-medium text-foreground">
                                     {delivery.eventType}
                                   </div>
-                                  <div className="text-muted-foreground font-mono">
+                                  <div className="break-all font-mono text-muted-foreground">
                                     {delivery.eventId}
                                   </div>
                                   {delivery.lastError && (
-                                    <div className="text-destructive font-mono mt-0.5">
+                                    <div className="mt-0.5 break-words font-mono text-destructive">
                                       {delivery.lastError}
                                     </div>
                                   )}
                                 </div>
-                                <div className="text-right">
+                                <div className="shrink-0 text-left sm:text-right">
                                   <span
                                     className={`px-2 py-0.5 rounded-full font-medium ${deliveryBadgeClass(
                                       delivery.status

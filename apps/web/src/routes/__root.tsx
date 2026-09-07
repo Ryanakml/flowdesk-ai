@@ -114,6 +114,12 @@ function RootComponent() {
     );
   }
 
+  // The root route is public. Protected routes continue through the existing
+  // session gate below, so landing-page visitors never get bounced to SSO.
+  if (pathname === "/" && !inviteToken) {
+    return <Outlet />;
+  }
+
   // 2. Unauthenticated Login Screen
   if (!sessionUser) {
     return <LoginView />;

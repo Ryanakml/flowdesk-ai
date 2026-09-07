@@ -1,5 +1,6 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { LandingPage } from "../features/landing/LandingPage.js";
 
 export const Route = createFileRoute("/")({
-  component: () => <Navigate to="/inbox" replace />
+  component: LandingPage
 });

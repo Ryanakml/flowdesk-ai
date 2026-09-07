@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import type { SessionUser, UserOrganization } from "@flowdesk/contracts";
 import { type RoleKey, type Permission, hasPermission } from "@flowdesk/domain";
 import {
@@ -45,8 +45,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [inviteToken, setInviteToken] = useState<string | null>(null);
   const [acceptingInvite, setAcceptingInvite] = useState(false);
   const [bootstrapping, setBootstrapping] = useState(false);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = useCallback((msg: string, isError = false) => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = null;
+    }
+
+    if (!msg) {
+      setErrorMsg(null);
+      setSuccessMsg(null);
+      return;
+    }
+
     if (isError) {
       setErrorMsg(msg);
       setSuccessMsg(null);
@@ -54,6 +66,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSuccessMsg(msg);
       setErrorMsg(null);
     }
+
+    // Action feedback is transient. Current-state warnings are rendered by the
+    // feature that owns that state and do not use this global channel.
+    toastTimerRef.current = setTimeout(() => {
+      setErrorMsg(null);
+      setSuccessMsg(null);
+      toastTimerRef.current = null;
+    }, 6500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   const refreshSession = useCallback(async () => {

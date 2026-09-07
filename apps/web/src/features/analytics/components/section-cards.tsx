@@ -27,7 +27,7 @@ export interface AnalyticsOverviewData {
 
 export function SectionCards({ overview }: { overview: AnalyticsOverviewData }) {
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
       {/* Total Conversations */}
       <Card className="@container/card">
         <CardHeader>

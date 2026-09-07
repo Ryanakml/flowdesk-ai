@@ -440,13 +440,15 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
           )}
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 xl:grid-cols-2">
           {channels.map((channel) => (
-            <Card key={channel.id} className="border-border">
+            <Card key={channel.id} className="h-full min-w-0 overflow-hidden border-border">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-base font-semibold">{channel.name}</CardTitle>
+                  <div className="min-w-0">
+                    <CardTitle className="break-words text-base font-semibold">
+                      {channel.name}
+                    </CardTitle>
                     <span className="text-xs text-muted-foreground font-mono">
                       Type: {channel.type.toUpperCase()}
                     </span>
@@ -469,19 +471,19 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                     {channel.statusReason}
                   </p>
                 )}
-                <div className="space-y-1 font-mono text-xs">
-                  <p>
+                <div className="min-w-0 space-y-1 font-mono text-xs">
+                  <p className="break-all">
                     <strong className="font-sans text-foreground text-sm">Phone Number ID:</strong>{" "}
                     {channel.phoneNumberId}
                   </p>
-                  <p>
+                  <p className="break-all">
                     <strong className="font-sans text-foreground text-sm">WABA ID:</strong>{" "}
                     {channel.wabaId}
                   </p>
                 </div>
               </CardContent>
               {canManage && (
-                <CardFooter className="flex flex-wrap gap-2 border-t pt-3">
+                <CardFooter className="flex flex-col items-stretch gap-2 border-t pt-3 sm:flex-row sm:flex-wrap sm:items-center">
                   <Button
                     type="button"
                     variant="outline"
@@ -507,7 +509,7 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                     variant="ghost"
                     size="sm"
                     onClick={() => void handleDelete(channel.id)}
-                    className="text-destructive hover:bg-destructive/10 cursor-pointer ml-auto"
+                    className="text-destructive hover:bg-destructive/10 cursor-pointer sm:ml-auto"
                   >
                     Disconnect
                   </Button>

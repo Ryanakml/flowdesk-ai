@@ -24,7 +24,7 @@ describe("App UI Shell (M1-07)", () => {
     expect(screen.getByText("Verifying secure tenant session")).toBeTruthy();
   });
 
-  it("renders login card when unauthenticated", async () => {
+  it("renders the public landing page when unauthenticated", async () => {
     // When session endpoint returns 401
     globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(
@@ -41,6 +41,9 @@ describe("App UI Shell (M1-07)", () => {
     );
 
     render(<App />);
-    expect(await screen.findByText("Sign in with SSO / OIDC")).toBeTruthy();
+    expect(
+      (await screen.findAllByRole("heading", { name: /Turn every customer message/i })).length
+    ).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: /Open FlowDesk/i }).length).toBeGreaterThan(0);
   });
 });
