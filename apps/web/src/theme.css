@@ -1,51 +1,22 @@
 @import "tailwindcss";
 @import "@flowdesk/ui/styles/tokens.css";
 
-@theme inline {
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-}
+@custom-variant dark (&:is(.dark *));
 
-:root {
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --sidebar: oklch(0.135 0.008 260);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.63 0.16 185);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.22 0.01 260);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.235 0.012 260);
-  --sidebar-ring: oklch(0.63 0.16 185);
-}
-
-/* Dividers should separate surfaces quietly; they are not card outlines. */
-.dark {
-  --border: oklch(0.235 0.012 260);
-  --input: oklch(0.27 0.012 260);
-}
-
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-feature-settings:
-    "rlig" 1,
-    "calt" 1;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
 }
 
 @layer utilities {
@@ -53,7 +24,6 @@ body {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
-
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }

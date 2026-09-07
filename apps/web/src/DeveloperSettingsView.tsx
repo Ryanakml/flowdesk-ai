@@ -452,9 +452,9 @@ export function DeveloperSettingsView({
           ) : (
             <div className="space-y-3">
               {keys.map((key) => (
-                <Card key={key.id} className="min-w-0 border-border p-5 sm:p-6">
-                  <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
+                <Card key={key.id} className="min-w-0 overflow-hidden border-border p-4">
+                  <div className="flex min-w-0 flex-col items-stretch gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <div className="mb-1 flex items-center gap-2">
                         <h4 className="min-w-0 break-words font-semibold text-foreground">
                           {key.name}
@@ -469,8 +469,11 @@ export function DeveloperSettingsView({
                           {key.revokedAt ? "Revoked" : "Active"}
                         </span>
                       </div>
-                      <p className="mb-4 break-all text-xs font-mono text-muted-foreground">
-                        Prefix: {key.keyPrefix}••••••••
+                      <p className="mb-2 text-xs text-muted-foreground">
+                        Prefix:{" "}
+                        <code className="break-all font-mono bg-muted px-1.5 py-0.5 rounded">
+                          {key.keyPrefix}••••••••
+                        </code>
                       </p>
                       <div className="space-y-2">
                         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -481,33 +484,37 @@ export function DeveloperSettingsView({
                             <Badge
                               key={scope}
                               variant="outline"
-                              className="bg-muted/50 text-xs font-mono"
+                              className="text-xs font-mono bg-primary/5 text-primary border-primary/20"
                             >
-                              {scope}
+                              <span className="break-all">{scope}</span>
                             </Badge>
                           ))}
                         </div>
                       </div>
                     </div>
-                    {canManage && !key.revokedAt && (
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm shrink-0 self-start text-destructive hover:bg-destructive/10 cursor-pointer"
-                        onClick={() => setPendingAction({ type: "revoke", id: key.id })}
-                      >
-                        Revoke
-                      </button>
-                    )}
-                    {key.revokedAt && (
-                      <button
-                        type="button"
-                        className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        onClick={() => setPendingAction({ type: "clear-key", id: key.id })}
-                        aria-label={`Clear revoked key ${key.name}`}
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    )}
+                    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end lg:max-w-[46%]">
+                      {canManage && !key.revokedAt && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 cursor-pointer"
+                          onClick={() => setPendingAction({ type: "revoke", id: key.id })}
+                        >
+                          Revoke
+                        </Button>
+                      )}
+                      {key.revokedAt && (
+                        <button
+                          type="button"
+                          className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          onClick={() => setPendingAction({ type: "clear-key", id: key.id })}
+                          aria-label={`Clear revoked key ${key.name}`}
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </Card>
               ))}

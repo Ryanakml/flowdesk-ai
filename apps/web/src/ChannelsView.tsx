@@ -466,8 +466,8 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                         }
                       />
                     </div>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {channel.type.toUpperCase()}
+                    <span className="mt-2 inline-flex rounded-md bg-muted px-2 py-1 text-xs font-medium text-foreground">
+                      {channel.type.toLowerCase() === "whatsapp" ? "WhatsApp Cloud" : channel.type}
                     </span>
                   </div>
                 </div>
@@ -488,7 +488,7 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                 </div>
               </CardContent>
               {canManage && (
-                <div className="flex flex-col items-stretch gap-2 px-6 pb-6 pt-1 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="flex flex-wrap items-center justify-end gap-2 px-6 pb-6 pt-1">
                   <Button
                     type="button"
                     variant="outline"
@@ -514,7 +514,7 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                     variant="ghost"
                     size="sm"
                     onClick={() => setDisconnectId(channel.id)}
-                    className="border border-destructive text-destructive hover:bg-destructive/10 cursor-pointer sm:ml-auto"
+                    className="border border-destructive text-destructive hover:bg-destructive/10 cursor-pointer"
                   >
                     Disconnect
                   </Button>

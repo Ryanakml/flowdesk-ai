@@ -117,19 +117,19 @@ export function MessageBubble({
     >
       <div
         className={cn(
-          "flex min-w-0 max-w-[min(75%,42rem)] flex-col sm:max-w-[min(75%,42rem)] max-[640px]:max-w-[88%]",
+          "flex min-w-0 max-w-[min(70%,36rem)] flex-col max-[640px]:max-w-[85%]",
           isInbound ? "items-start" : "items-end"
         )}
       >
         <div
           className={cn(
-            "message-bubble w-fit max-w-full px-3.5 py-2 rounded-2xl text-sm shadow-xs",
+            "message-bubble w-fit min-w-0 max-w-full px-3.5 py-2 rounded-md text-sm shadow-xs",
             isInbound
               ? cn("bg-muted text-foreground rounded-tl-xs shadow-sm", grouped && "rounded-tl-md")
               : cn("bg-primary text-primary-foreground shadow-sm", grouped && "rounded-tr-md")
           )}
         >
-          <div className="message-text min-w-0 break-words leading-relaxed">
+          <div className="message-text min-w-0 [overflow-wrap:anywhere] leading-relaxed">
             <MarkdownContent content={msg.content} />
           </div>
           <div

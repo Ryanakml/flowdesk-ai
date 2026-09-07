@@ -1084,6 +1084,9 @@ export function InboxWorkspace({
                 </SheetHeader>
                 <div className="h-[calc(100%-49px)]">
                   <CustomerContextPanel
+                    organizationId={organizationId}
+                    canManageAutomation={hasPermission(userRole, "automation:publish")}
+                    fetcher={fetcher}
                     conversation={activeConversation}
                     notes={notes}
                     tags={conversationTags}
@@ -1135,6 +1138,9 @@ export function InboxWorkspace({
             <div className="h-full min-w-0 flex-1 overflow-hidden">{renderCenterPane()}</div>
             <div className="h-full w-80 min-w-0 flex-shrink-0 overflow-hidden border-l border-border">
               <CustomerContextPanel
+                organizationId={organizationId}
+                canManageAutomation={hasPermission(userRole, "automation:publish")}
+                fetcher={fetcher}
                 conversation={activeConversation}
                 notes={notes}
                 tags={conversationTags}
@@ -1221,6 +1227,9 @@ export function InboxWorkspace({
                 className="h-full min-h-0 min-w-0 overflow-hidden"
               >
                 <CustomerContextPanel
+                  organizationId={organizationId}
+                  canManageAutomation={hasPermission(userRole, "automation:publish")}
+                  fetcher={fetcher}
                   conversation={activeConversation}
                   notes={notes}
                   tags={conversationTags}

@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { KnowledgeView } from "./KnowledgeView.js";
+import { BotConfiguration } from "./features/inbox/components/BotConfiguration.js";
 
 const originalFetch = globalThis.fetch;
 const orgId = "30000000-0000-4000-8000-000000000001";
@@ -151,7 +152,6 @@ describe("KnowledgeView", () => {
     });
     fireEvent.click(screen.getByText("Add knowledge"));
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
     expect(await screen.findByText("queued")).toBeTruthy();
     const postCall = fetchMock.mock.calls.find((call) => call[1]?.method === "POST");
     expect(postCall?.[1]).toMatchObject({
@@ -174,9 +174,10 @@ describe("KnowledgeView", () => {
 
     await screen.findByText("No knowledge sources yet.");
     expect(screen.queryByText("Add knowledge")).toBeNull();
+    expect(screen.queryByLabelText("Bot mode")).toBeNull();
   });
 
-  it("explicitly enables AUTO through the authorized bot configuration API", async () => {
+  it("enables AUTO from the Inbox bot controls through the existing API", async () => {
     const showToast = vi.fn();
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = requestUrl(input);
@@ -187,7 +188,7 @@ describe("KnowledgeView", () => {
       return Promise.resolve(json({ sources: [] }));
     });
     globalThis.fetch = fetchMock;
-    render(<KnowledgeView orgId={orgId} canManage={true} showToast={showToast} />);
+    render(<BotConfiguration orgId={orgId} canManage={true} showToast={showToast} />);
 
     const select = await screen.findByLabelText("Bot mode");
     fireEvent.change(select, { target: { value: "auto" } });
@@ -199,6 +200,36 @@ describe("KnowledgeView", () => {
       ).toBe(true)
     );
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining("AUTO enabled"), "success");
+  });
+
+  it("shows the actual bot mode read-only for agents without automation permission", async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(json(botConfig("off")));
+    render(<BotConfiguration orgId={orgId} canManage={false} />);
+    const mode = await screen.findByLabelText<HTMLSelectElement>("Bot mode");
+    expect(mode.value).toBe("off");
+    expect(mode.disabled).toBe(true);
+    expect(screen.queryByRole("button", { name: /Save .* mode/ })).toBeNull();
+    expect(screen.queryByTestId("automation-emergency-stop")).toBeNull();
+  });
+
+  it("recovers from a bot config load error and preserves mode when emergency stop fails", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json({ detail: "Unavailable" }, 503))
+      .mockResolvedValueOnce(json(botConfig("draft")))
+      .mockResolvedValueOnce(json({ detail: "Stop could not be applied" }, 503));
+    globalThis.fetch = fetchMock;
+    render(<BotConfiguration orgId={orgId} canManage={true} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Retry configuration" }));
+    const mode = await screen.findByLabelText<HTMLSelectElement>("Bot mode");
+    fireEvent.click(screen.getByTestId("automation-emergency-stop"));
+    expect(await screen.findByText("Stop could not be applied")).toBeTruthy();
+    expect(mode.value).toBe("draft");
+    expect(mode.disabled).toBe(false);
+    expect(fetchMock.mock.calls[2]?.[1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({ enabled: true })
+    });
   });
 
   it("renders automation policy section and displays simulator decision trace", async () => {

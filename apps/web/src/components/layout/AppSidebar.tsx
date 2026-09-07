@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useAuth } from "../../features/auth/context.js";
 import {
   navigationGroups,
@@ -10,7 +9,7 @@ import {
 } from "./navigation.js";
 import { OrgSwitcher } from "./OrgSwitcher.js";
 import { UserNav } from "./UserNav.js";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Button } from "@flowdesk/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@flowdesk/ui";
 
 export function FlowDeskIcon({ size = 20 }: { size?: number }) {
   return (
@@ -46,17 +45,11 @@ export function FlowDeskIcon({ size = 20 }: { size?: number }) {
 
 interface AppSidebarProps {
   collapsed?: boolean;
-  onToggleCollapse?: () => void;
   onNavigate?: () => void;
   className?: string;
 }
 
-export function AppSidebar({
-  collapsed = false,
-  onToggleCollapse,
-  onNavigate,
-  className = ""
-}: AppSidebarProps) {
+export function AppSidebar({ collapsed = false, onNavigate, className = "" }: AppSidebarProps) {
   const { checkPermission } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
@@ -102,38 +95,13 @@ export function AppSidebar({
     <TooltipProvider>
       <aside
         aria-label="Sidebar"
-        className={`flex h-full flex-col border-r border-border/70 bg-background select-none transition-all duration-200 ${
+        className={`flex h-full flex-col border-r border-border/70 bg-sidebar text-sidebar-foreground select-none transition-all duration-200 ${
           collapsed ? "w-16" : "w-64"
         } ${className}`}
         data-testid="app-sidebar"
       >
-        {/* Sidebar Header: organization mark, brand, and collapse toggle */}
-        <div className="flex flex-none items-center gap-2 p-3">
-          <OrgSwitcher collapsed compact />
-          <Link
-            to="/inbox"
-            onClick={() => onNavigate?.()}
-            className="flex items-center gap-2 font-bold text-foreground tracking-tight hover:opacity-90 transition-opacity pl-1"
-            data-testid="brand-logo"
-          >
-            {!collapsed && <span className="text-[15px] font-semibold">FlowDesk</span>}
-          </Link>
-          {onToggleCollapse && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onToggleCollapse}
-              className="ml-auto h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-              aria-label="Toggle sidebar collapse"
-              data-testid="sidebar-collapse-button"
-            >
-              {collapsed ? (
-                <PanelLeftOpen className="h-4 w-4" />
-              ) : (
-                <PanelLeftClose className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+        <div className="flex h-12 flex-none items-center px-3">
+          <OrgSwitcher collapsed={collapsed} compact />
         </div>
 
         {/* Navigation Groups Container */}
@@ -168,7 +136,7 @@ export function AppSidebar({
         </div>
 
         {/* Sidebar Footer: User Profile & Account Actions */}
-        <div className="z-10 flex-none border-t border-border/60 bg-background p-3">
+        <div className="z-10 flex-none border-t border-border/60 bg-sidebar p-3">
           <UserNav collapsed={collapsed} />
         </div>
       </aside>
