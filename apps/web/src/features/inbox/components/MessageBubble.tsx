@@ -117,8 +117,8 @@ export function MessageBubble({ message: msg, onRetry, onRemove }: MessageBubble
           className={cn(
             "message-bubble w-fit max-w-full px-3.5 py-2 rounded-2xl text-sm shadow-xs",
             isInbound
-              ? "bg-muted text-foreground rounded-tl-xs border border-border/50"
-              : "bg-primary text-primary-foreground rounded-tr-xs"
+              ? "bg-muted text-foreground rounded-tl-xs shadow-sm"
+              : "bg-emerald-600 text-white shadow-sm dark:bg-emerald-700"
           )}
         >
           <div className="message-text min-w-0 whitespace-pre-wrap break-words leading-relaxed">

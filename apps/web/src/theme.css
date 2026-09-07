@@ -24,20 +24,20 @@
 }
 
 .dark {
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.135 0.008 260);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary: oklch(0.63 0.16 185);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.22 0.01 260);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-border: oklch(0.235 0.012 260);
+  --sidebar-ring: oklch(0.63 0.16 185);
 }
 
 /* Dividers should separate surfaces quietly; they are not card outlines. */
 .dark {
-  --border: oklch(0.22 0 0);
-  --input: oklch(0.25 0 0);
+  --border: oklch(0.235 0.012 260);
+  --input: oklch(0.27 0.012 260);
 }
 
 body {
