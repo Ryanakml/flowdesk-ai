@@ -101,22 +101,29 @@ export function MessageBubble({ message: msg, onRetry, onRemove }: MessageBubble
   return (
     <div
       className={cn(
-        "flex mb-2",
+        "flex w-full min-w-0 mb-2",
         "message-bubble-wrapper",
         isInbound ? "justify-start inbound" : "justify-end outbound"
       )}
       data-testid={`msg-bubble-${msg.id}`}
     >
-      <div className={cn("max-w-[75%] flex flex-col", isInbound ? "items-start" : "items-end")}>
+      <div
+        className={cn(
+          "flex min-w-0 max-w-[min(75%,42rem)] flex-col sm:max-w-[min(75%,42rem)] max-[640px]:max-w-[88%]",
+          isInbound ? "items-start" : "items-end"
+        )}
+      >
         <div
           className={cn(
-            "message-bubble px-3.5 py-2 rounded-2xl text-sm shadow-xs",
+            "message-bubble w-fit max-w-full px-3.5 py-2 rounded-2xl text-sm shadow-xs",
             isInbound
               ? "bg-muted text-foreground rounded-tl-xs border border-border/50"
               : "bg-primary text-primary-foreground rounded-tr-xs"
           )}
         >
-          <div className="message-text whitespace-pre-wrap break-words">{msg.content}</div>
+          <div className="message-text min-w-0 whitespace-pre-wrap break-words leading-relaxed">
+            {msg.content}
+          </div>
           <div
             className={cn(
               "message-meta flex items-center gap-1 mt-1 text-xs",

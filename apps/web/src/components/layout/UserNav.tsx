@@ -42,7 +42,7 @@ export function UserNav({ collapsed = false }: UserNavProps) {
           className={`flex items-center gap-2 text-foreground font-normal hover:bg-muted/60 transition-colors ${
             collapsed
               ? "h-10 w-10 p-0 justify-center rounded-lg"
-              : "w-full h-auto p-2 justify-start rounded-lg border border-border/40 bg-muted/20"
+              : "w-full h-auto p-2 justify-start rounded-lg border border-border/60 bg-card"
           }`}
           data-testid="user-nav-trigger"
           aria-label="User account menu"
@@ -74,7 +74,11 @@ export function UserNav({ collapsed = false }: UserNavProps) {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56" sideOffset={8}>
+      <DropdownMenuContent
+        align="end"
+        className="w-56 border-border/80 bg-popover text-popover-foreground shadow-xl"
+        sideOffset={8}
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-xs font-medium leading-none text-foreground">

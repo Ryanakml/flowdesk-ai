@@ -102,7 +102,7 @@ export function AppSidebar({
     <TooltipProvider>
       <aside
         aria-label="Sidebar"
-        className={`flex flex-col h-full border-r border-border/60 bg-background select-none transition-all duration-200 ${
+        className={`flex h-full flex-col border-r border-border/70 bg-background select-none transition-all duration-200 ${
           collapsed ? "w-16" : "w-64"
         } ${className}`}
         data-testid="app-sidebar"
@@ -175,7 +175,7 @@ export function AppSidebar({
         </div>
 
         {/* Sidebar Footer: User Profile & Account Actions */}
-        <div className="flex-none p-3">
+        <div className="z-10 flex-none border-t border-border/60 bg-background p-3">
           <UserNav collapsed={collapsed} />
         </div>
       </aside>

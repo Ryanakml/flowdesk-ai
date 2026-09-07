@@ -836,9 +836,9 @@ export function InboxWorkspace({
     }
 
     return (
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-background">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
         {/* Header */}
-        <div className="flex items-center">
+        <div className="flex min-w-0 shrink-0 items-center">
           {isMobile && (
             <button
               type="button"
@@ -866,7 +866,7 @@ export function InboxWorkspace({
           {isTablet && (
             <button
               type="button"
-              className="px-3 py-2 text-muted-foreground hover:text-foreground border-b border-border"
+              className="shrink-0 px-3 py-2 text-muted-foreground hover:text-foreground"
               onClick={() => setTabletContextOpen(true)}
               aria-label="Open context panel"
             >
