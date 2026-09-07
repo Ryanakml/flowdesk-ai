@@ -58,6 +58,7 @@ export interface InboxWorkspaceProps {
   initialActiveConversation?: Conversation;
   activeConversationId?: string | null;
   onSelectConversation?: (id: string) => void;
+  onBackToList?: () => void;
   initialMessages?: Message[];
   onRealtimeHint?: (hint: RealtimeHint) => void;
   onRealtimeReconcile?: () => void;
@@ -74,6 +75,7 @@ export function InboxWorkspace({
   initialActiveConversation,
   activeConversationId,
   onSelectConversation,
+  onBackToList,
   initialMessages,
   onRealtimeHint,
   onRealtimeReconcile
@@ -99,9 +101,18 @@ export function InboxWorkspace({
   const [loadingConversations, setLoadingConversations] = useState(
     initialConversations === undefined
   );
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
-    activeConversationId ?? initialActiveConversation?.id ?? initialConversations?.[0]?.id ?? null
-  );
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(() => {
+    const shouldStartWithList =
+      typeof window !== "undefined" &&
+      window.innerWidth < 768 &&
+      activeConversationId === undefined;
+    return shouldStartWithList
+      ? null
+      : (activeConversationId ??
+          initialActiveConversation?.id ??
+          initialConversations?.[0]?.id ??
+          null);
+  });
 
   const [resources, setResources] = useState<InboxWorkspaceResourcesResponse>({
     queues: [],
@@ -197,7 +208,13 @@ export function InboxWorkspace({
 
         if (res.items.length > 0) {
           const targetId = activeConversationId ?? selectedConversationId;
-          if (!preserveSelection && !activeConversationId) {
+          const keepMobileList =
+            typeof window !== "undefined" &&
+            window.innerWidth < 768 &&
+            activeConversationId === undefined;
+          if (keepMobileList && !activeConversationId) {
+            setSelectedConversationId(null);
+          } else if (!preserveSelection && !activeConversationId) {
             setSelectedConversationId(res.items[0]!.id);
           } else if (targetId) {
             const exists = res.items.some((c) => c.id === targetId);
@@ -826,7 +843,10 @@ export function InboxWorkspace({
             <button
               type="button"
               className="p-2.5 text-muted-foreground hover:text-foreground"
-              onClick={() => setSelectedConversationId(null)}
+              onClick={() => {
+                setSelectedConversationId(null);
+                onBackToList?.();
+              }}
               aria-label="Back to conversations"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -969,10 +989,10 @@ export function InboxWorkspace({
       )}
 
       {/* Main Workspace Area */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {/* Mobile View: 1-pane drill down */}
         {isMobile ? (
-          <div className="h-full w-full">
+          <div className="h-full min-h-0 min-w-0 w-full overflow-hidden">
             {!selectedConversationId ? (
               <ConversationList
                 conversations={conversations}
@@ -1009,8 +1029,8 @@ export function InboxWorkspace({
           </div>
         ) : isTablet ? (
           /* Tablet View: 2-pane (Queue + Center) with Right Context Sheet */
-          <div className="flex h-full w-full">
-            <div className="w-80 flex-shrink-0 border-r border-border h-full">
+          <div className="flex h-full min-h-0 min-w-0 w-full overflow-hidden">
+            <div className="h-full w-80 min-w-0 flex-shrink-0 overflow-hidden border-r border-border">
               <ConversationList
                 conversations={conversations}
                 loading={loadingConversations}
@@ -1041,7 +1061,7 @@ export function InboxWorkspace({
                 onLocaleToggle={() => setLocale((c) => (c === "en" ? "id" : "en"))}
               />
             </div>
-            <div className="flex-1 h-full min-w-0">{renderCenterPane()}</div>
+            <div className="h-full min-w-0 flex-1 overflow-hidden">{renderCenterPane()}</div>
 
             {/* Tablet Slide-out Sheet for Right Context */}
             <Sheet open={tabletContextOpen} onOpenChange={setTabletContextOpen}>
@@ -1067,8 +1087,8 @@ export function InboxWorkspace({
           </div>
         ) : typeof window !== "undefined" && !window.ResizeObserver ? (
           /* Fallback Desktop View when ResizeObserver is unavailable (e.g. standard JSDOM test suites) */
-          <div className="flex h-full w-full">
-            <div className="w-80 flex-shrink-0 border-r border-border h-full">
+          <div className="flex h-full min-h-0 min-w-0 w-full overflow-hidden">
+            <div className="h-full w-80 min-w-0 flex-shrink-0 overflow-hidden border-r border-border">
               <ConversationList
                 conversations={conversations}
                 loading={loadingConversations}
@@ -1099,8 +1119,8 @@ export function InboxWorkspace({
                 onLocaleToggle={() => setLocale((c) => (c === "en" ? "id" : "en"))}
               />
             </div>
-            <div className="flex-1 h-full min-w-0">{renderCenterPane()}</div>
-            <div className="w-80 flex-shrink-0 border-l border-border h-full">
+            <div className="h-full min-w-0 flex-1 overflow-hidden">{renderCenterPane()}</div>
+            <div className="h-full w-80 min-w-0 flex-shrink-0 overflow-hidden border-l border-border">
               <CustomerContextPanel
                 conversation={activeConversation}
                 notes={notes}
@@ -1120,10 +1140,15 @@ export function InboxWorkspace({
             orientation="horizontal"
             defaultLayout={defaultLayout}
             onLayoutChanged={onLayoutChanged}
-            className="h-full w-full"
+            className="h-full min-h-0 min-w-0 w-full"
           >
             {/* Left Panel: Conversation Queue */}
-            <Panel defaultSize={25} minSize={18} maxSize={35} className="h-full">
+            <Panel
+              defaultSize={25}
+              minSize={18}
+              maxSize={35}
+              className="h-full min-h-0 min-w-0 overflow-hidden"
+            >
               <ConversationList
                 conversations={conversations}
                 loading={loadingConversations}
@@ -1158,14 +1183,19 @@ export function InboxWorkspace({
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
 
             {/* Center Panel: Stream & Composer */}
-            <Panel defaultSize={50} minSize={30} className="h-full">
+            <Panel defaultSize={50} minSize={30} className="h-full min-h-0 min-w-0 overflow-hidden">
               {renderCenterPane()}
             </Panel>
 
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
 
             {/* Right Panel: Customer & Operational Context */}
-            <Panel defaultSize={25} minSize={20} maxSize={35} className="h-full">
+            <Panel
+              defaultSize={25}
+              minSize={20}
+              maxSize={35}
+              className="h-full min-h-0 min-w-0 overflow-hidden"
+            >
               <CustomerContextPanel
                 conversation={activeConversation}
                 notes={notes}

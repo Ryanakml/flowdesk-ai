@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { AppSidebar } from "./AppSidebar.js";
 import { Header } from "./Header.js";
@@ -16,6 +16,12 @@ export function AppShell({ children }: AppShellProps) {
   const { errorMsg, successMsg, showToast } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isInboxRoute = pathname.startsWith("/inbox");
+
+  useEffect(() => {
+    // Navigation invalidates action feedback. Operational state warnings stay
+    // inside the owning feature and are intentionally not cleared here.
+    showToast("", false);
+  }, [pathname, showToast]);
 
   return (
     <div

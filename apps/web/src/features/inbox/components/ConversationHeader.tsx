@@ -27,7 +27,7 @@ export function ConversationHeader({
   return (
     <header className="thread-header flex items-center justify-between px-4 py-3 border-b border-border bg-background flex-shrink-0">
       {/* Customer info */}
-      <div className="thread-customer-info min-w-0">
+      <div className="thread-customer-info min-w-0 flex-1">
         <h3 className="text-sm font-semibold text-foreground truncate">
           {conv.customerName ?? `+${conv.customerPhone}`}
         </h3>
@@ -78,7 +78,7 @@ export function ConversationHeader({
       </div>
 
       {/* Action Buttons */}
-      <div className="thread-actions flex items-center gap-2 flex-shrink-0 ml-3">
+      <div className="thread-actions ml-2 flex max-w-[48%] flex-shrink-0 flex-wrap items-center justify-end gap-1.5 sm:ml-3 sm:max-w-none sm:gap-2">
         {!isAssignedToMe && canAssign && (
           <button
             type="button"

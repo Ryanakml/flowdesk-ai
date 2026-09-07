@@ -75,10 +75,10 @@ export function MessageComposer({
   if (isWindowExpired) {
     return (
       <div
-        className="composer-window-expired-banner px-4 py-3 bg-orange-50 dark:bg-orange-950/20 border-t border-border flex items-center justify-between gap-3"
+        className="composer-window-expired-banner flex items-center justify-between gap-2 border-t border-border bg-orange-50 px-3 py-2 dark:bg-orange-950/20 sm:gap-3 sm:px-4 sm:py-3"
         data-testid="composer-window-expired"
       >
-        <div className="banner-text text-sm text-muted-foreground">
+        <div className="banner-text min-w-0 text-xs text-muted-foreground sm:text-sm">
           <strong className="text-foreground">24-hour service window expired.</strong> Free-form
           messaging is blocked by WhatsApp policy. You must use an approved template to contact this
           customer.
@@ -88,7 +88,7 @@ export function MessageComposer({
           size="sm"
           onClick={onOpenTemplate}
           data-testid="btn-open-template-composer"
-          className="flex-shrink-0"
+          className="flex-shrink-0 rounded bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:px-3 sm:py-1.5 sm:text-xs"
         >
           📋 Select WhatsApp Template
         </Button>

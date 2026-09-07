@@ -27,7 +27,7 @@ export function MessageTimeline({
 
   return (
     <div
-      className="flex-1 overflow-y-auto px-4 py-3 space-y-1"
+      className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-2 space-y-1 sm:px-4 sm:py-3"
       role="log"
       aria-live="polite"
       aria-label="Message history"

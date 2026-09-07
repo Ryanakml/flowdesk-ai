@@ -108,7 +108,7 @@ export function AppSidebar({
         data-testid="app-sidebar"
       >
         {/* Sidebar Header: Brand & Collapse Toggle */}
-        <div className="flex items-center justify-between p-3">
+        <div className="flex flex-none items-center justify-between p-3">
           <Link
             to="/inbox"
             onClick={() => onNavigate?.()}
@@ -139,12 +139,12 @@ export function AppSidebar({
         </div>
 
         {/* Workspace / Organization Switcher */}
-        <div className="px-3 pb-2 pt-1">
+        <div className="flex-none px-3 pb-2 pt-1">
           <OrgSwitcher collapsed={collapsed} />
         </div>
 
         {/* Navigation Groups Container */}
-        <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-6">
           {navigationGroups.map((group) => {
             const visibleItems = group.items.filter((item) => {
               if (item.permission) {
@@ -175,7 +175,7 @@ export function AppSidebar({
         </div>
 
         {/* Sidebar Footer: User Profile & Account Actions */}
-        <div className="p-3 mt-auto">
+        <div className="flex-none p-3">
           <UserNav collapsed={collapsed} />
         </div>
       </aside>

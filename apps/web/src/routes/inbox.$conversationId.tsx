@@ -31,6 +31,9 @@ function InboxConversationRouteComponent() {
           params: { conversationId: id }
         });
       }}
+      onBackToList={() => {
+        void navigate({ to: "/inbox" });
+      }}
       onRealtimeHint={(hint) => handleRealtimeHint(queryClient, hint)}
       onRealtimeReconcile={() => handleRealtimeReconciliation(queryClient, selectedOrgId)}
     />

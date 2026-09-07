@@ -96,7 +96,7 @@ export function AiDraftCard({
 
   return (
     <section
-      className="copilot-panel border-t border-border bg-muted/30 px-4 py-3"
+      className="copilot-panel min-w-0 border-t border-border bg-muted/30 px-3 py-2 sm:px-4 sm:py-3"
       aria-label="AI Copilot"
       data-testid="copilot-panel"
     >
@@ -186,7 +186,7 @@ export function AiDraftCard({
           {/* Draft text */}
           <div className="copilot-draft-body mb-2">
             <p
-              className="copilot-draft-text text-sm text-foreground bg-background rounded border border-border px-2.5 py-2 whitespace-pre-wrap"
+              className="copilot-draft-text max-h-20 overflow-y-auto break-words rounded border border-border bg-background px-2.5 py-1.5 text-xs text-foreground whitespace-pre-wrap sm:max-h-28 sm:px-2.5 sm:py-2 sm:text-sm"
               data-testid="copilot-draft-text"
             >
               {draft.suggestedContent}
@@ -249,7 +249,7 @@ export function AiDraftCard({
 
           {/* Actions */}
           <div
-            className="copilot-actions flex items-center gap-2"
+            className="copilot-actions flex flex-wrap items-center gap-1.5"
             role="group"
             aria-label="Copilot draft actions"
           >

@@ -165,9 +165,9 @@ export function TeamView({ initialShowInviteModal = false }: TeamViewProps = {})
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8" data-testid="team-view">
       {/* Donor-transplanted User Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Card className="border border-border">
-          <CardContent className="space-y-4 p-5">
+          <CardContent className="space-y-3 p-3 sm:space-y-4 sm:p-5">
             <div className="flex items-center justify-between">
               <Users className="text-muted-foreground size-6" />
               <Badge
