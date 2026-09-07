@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Menu } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Breadcrumbs } from "./Breadcrumbs.js";
 import { CommandMenu } from "./CommandMenu.js";
 import { ThemeToggle } from "../theme-toggle.js";
@@ -7,9 +7,11 @@ import { Button } from "@flowdesk/ui";
 
 interface HeaderProps {
   onOpenMobileNav: () => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export function Header({ onOpenMobileNav }: HeaderProps) {
+export function Header({ onOpenMobileNav, collapsed, onToggleCollapse }: HeaderProps) {
   return (
     <header
       role="banner"
@@ -17,6 +19,17 @@ export function Header({ onOpenMobileNav }: HeaderProps) {
       data-testid="app-header"
     >
       <div className="flex items-center gap-2 sm:gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onToggleCollapse}
+          className="hidden h-8 w-8 p-0 lg:inline-flex"
+          aria-label="Toggle sidebar collapse"
+          aria-expanded={!collapsed}
+          data-testid="sidebar-collapse-button"
+        >
+          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </Button>
         {/* Mobile Hamburger Button */}
         <Button
           variant="ghost"

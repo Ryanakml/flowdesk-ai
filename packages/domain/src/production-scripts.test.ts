@@ -712,6 +712,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       }).toThrow(/Missing required production infrastructure configuration/);
     });
 
+    // Four shell/Node invocations share one test budget; allow CI coverage contention.
     it("correctly calculates and applies weights in mock mode (5%, 25%, 100%, 0%)", () => {
       const stateFile = path.join(os.tmpdir(), "canary-test-state-" + Date.now() + ".json");
       const mockEnv = {
@@ -748,7 +749,7 @@ describe("Production Deployment Scripts Integration Tests (M5-07 / #181, #203, #
       expect(state.stableWeight).toBe(100);
 
       fs.unlinkSync(stateFile);
-    });
+    }, 30_000);
 
     it("executes non-mock AWS path and correctly parses exported DESCRIBE_OUTPUT from stubbed AWS CLI", () => {
       const stub = setupStubAws({

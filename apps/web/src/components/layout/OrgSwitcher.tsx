@@ -23,13 +23,17 @@ export function OrgSwitcher({ collapsed = false, compact = false }: OrgSwitcherP
     if (compact) {
       return (
         <div
-          className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-muted/30 text-xs font-semibold text-foreground"
+          className="flex min-w-0 items-center gap-2.5 text-sm font-semibold text-sidebar-foreground"
           id="active-org-badge"
           data-testid="active-org-badge"
           title={activeOrg?.name ?? "Workspace"}
         >
-          {(activeOrg?.name ?? "W").slice(0, 1).toUpperCase()}
-          <span className="sr-only">{activeOrg?.name ?? "Workspace"}</span>
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-sidebar-accent">
+            <Building2 className="size-4" />
+          </span>
+          <span className={collapsed ? "sr-only" : "truncate"}>
+            {activeOrg?.name ?? "Workspace"}
+          </span>
         </div>
       );
     }
@@ -61,8 +65,8 @@ export function OrgSwitcher({ collapsed = false, compact = false }: OrgSwitcherP
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className={`flex items-center justify-between border-border/60 bg-muted/30 hover:bg-muted/60 text-foreground font-normal transition-colors ${
+          variant={compact ? "ghost" : "outline"}
+          className={`flex items-center justify-between text-sidebar-foreground font-normal transition-colors ${
             collapsed ? "h-9 w-9 p-0 justify-center" : "w-full h-auto px-2 py-1.5"
           }`}
           aria-label="Switch organization"
@@ -72,20 +76,20 @@ export function OrgSwitcher({ collapsed = false, compact = false }: OrgSwitcherP
             <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-border bg-background text-muted-foreground">
               <Building2 className="h-3.5 w-3.5" />
             </div>
-            {(!collapsed || compact) && (
+            {!collapsed && (
               <div className="flex flex-col min-w-0 text-left">
                 <span className="truncate text-xs font-semibold text-foreground">
                   {activeOrg?.name}
                 </span>
-                <span className="truncate text-[10px] text-muted-foreground uppercase tracking-wider font-mono">
-                  {currentRole.replace("_", " ")}
-                </span>
+                {!compact && (
+                  <span className="truncate text-[10px] text-muted-foreground uppercase tracking-wider font-mono">
+                    {currentRole.replace("_", " ")}
+                  </span>
+                )}
               </div>
             )}
           </div>
-          {(!collapsed || compact) && (
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />
-          )}
+          {!collapsed && <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-muted-foreground" />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">

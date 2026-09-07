@@ -5,6 +5,7 @@ import type {
 } from "@flowdesk/contracts";
 import { Skeleton } from "@flowdesk/ui";
 import { User, Phone, Clock, Tag } from "lucide-react";
+import { BotConfiguration } from "./BotConfiguration.js";
 
 function formatDate(isoString: string): string {
   try {
@@ -20,6 +21,9 @@ function formatDate(isoString: string): string {
 }
 
 interface CustomerContextPanelProps {
+  organizationId: string;
+  canManageAutomation: boolean;
+  fetcher?: typeof fetch;
   conversation: Conversation | null;
   notes?: ConversationDetailResponse["notes"];
   tags?: ConversationDetailResponse["tags"];
@@ -32,6 +36,9 @@ interface CustomerContextPanelProps {
 }
 
 export function CustomerContextPanel({
+  organizationId,
+  canManageAutomation,
+  fetcher,
   conversation: conv,
   notes = [],
   tags = [],
@@ -61,7 +68,7 @@ export function CustomerContextPanel({
   }
 
   return (
-    <div className="scrollbar-hidden h-full overflow-y-auto bg-background border-l border-border">
+    <div className="scrollbar-hidden h-full min-w-0 overflow-y-auto bg-background border-l border-border [overflow-wrap:anywhere] [&_input]:min-w-0">
       {/* Customer Profile */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-2 mb-3">
@@ -131,10 +138,15 @@ export function CustomerContextPanel({
         <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Automation
         </h4>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Mode</span>
-          <span className="font-medium text-foreground">{conv.botPaused ? "Paused" : "Auto"}</span>
-        </div>
+        <BotConfiguration
+          key={organizationId}
+          orgId={organizationId}
+          canManage={canManageAutomation}
+          fetcher={fetcher}
+        />
+        {conv.botPaused && (
+          <p className="text-xs text-muted-foreground">Bot paused for this conversation.</p>
+        )}
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Service window</span>
           <span

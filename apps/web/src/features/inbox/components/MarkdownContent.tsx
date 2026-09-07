@@ -66,7 +66,7 @@ export function MarkdownContent({ content, className }: { content: string; class
           return (
             <pre
               key={index}
-              className="my-2 overflow-x-auto rounded-md bg-background/70 p-2 text-xs"
+              className="scrollbar-hidden my-2 max-w-full overflow-x-auto rounded-sm bg-muted p-2 text-xs text-foreground"
             >
               <code>{block.lines.join("\n")}</code>
             </pre>

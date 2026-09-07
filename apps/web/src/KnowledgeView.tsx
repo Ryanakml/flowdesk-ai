@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import type {
-  BotConfigResponse,
   KnowledgeSourceResponse,
   AutomationPolicyResponse,
   SimulatePolicyResponse
 } from "@flowdesk/contracts";
-import { Brain, Cpu, Plus, Sliders, Play } from "lucide-react";
+import { Brain, Plus, Sliders, Play } from "lucide-react";
 import {
   Badge,
   Button,
@@ -29,14 +28,8 @@ import {
   TableRow,
   Textarea
 } from "@flowdesk/ui";
+import { createKnowledgeSourceApi, listKnowledgeSourcesApi } from "./api.js";
 import {
-  createKnowledgeSourceApi,
-  getBotConfig,
-  listKnowledgeSourcesApi,
-  updateBotConfig
-} from "./api.js";
-import {
-  setAutomationEmergencyStop,
   fetchAutomationPolicies,
   publishAutomationPolicy,
   simulateAutomationPolicy
@@ -55,11 +48,6 @@ export function KnowledgeView({ orgId, canManage, showToast }: KnowledgeViewProp
   const [type, setType] = useState<"text" | "url">("text");
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
-  const [botConfig, setBotConfig] = useState<BotConfigResponse | null>(null);
-  const [selectedMode, setSelectedMode] = useState<"off" | "draft" | "auto">("draft");
-  const [savingMode, setSavingMode] = useState(false);
-  const [savingEmergencyStop, setSavingEmergencyStop] = useState(false);
-
   // Policy & Simulator state
   const [policies, setPolicies] = useState<AutomationPolicyResponse[]>([]);
   const [activePolicy, setActivePolicy] = useState<AutomationPolicyResponse | null>(null);
@@ -102,63 +90,6 @@ export function KnowledgeView({ orgId, canManage, showToast }: KnowledgeViewProp
     void refresh();
     void refreshPolicies();
   }, [refresh, refreshPolicies]);
-
-  useEffect(() => {
-    void getBotConfig(orgId)
-      .then((config) => {
-        setBotConfig(config);
-        setSelectedMode(config.mode);
-      })
-      .catch((error: unknown) =>
-        showToast(
-          error instanceof Error ? error.message : "Failed to load bot configuration",
-          "error"
-        )
-      );
-  }, [orgId, showToast]);
-
-  const saveMode = async () => {
-    try {
-      setSavingMode(true);
-      const updated = await updateBotConfig(orgId, { mode: selectedMode });
-      setBotConfig(updated);
-      showToast(
-        selectedMode === "auto"
-          ? "AUTO enabled. Eligible grounded inbound replies may now send automatically."
-          : `Bot mode changed to ${selectedMode.toUpperCase()}.`,
-        "success"
-      );
-    } catch (error) {
-      showToast(error instanceof Error ? error.message : "Failed to update bot mode", "error");
-    } finally {
-      setSavingMode(false);
-    }
-  };
-
-  const toggleEmergencyStop = async () => {
-    if (!botConfig) return;
-    const nextDisabled = !botConfig.emergencyDisabled;
-    try {
-      setSavingEmergencyStop(true);
-      const updated = await setAutomationEmergencyStop(orgId, nextDisabled);
-      setBotConfig((current) =>
-        current ? { ...current, emergencyDisabled: updated.emergencyDisabled } : current
-      );
-      showToast(
-        updated.emergencyDisabled
-          ? "Emergency stop engaged. Pending and new automated sends are halted."
-          : "Emergency stop cleared. Automation resumed.",
-        "success"
-      );
-    } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : "Failed to update emergency stop",
-        "error"
-      );
-    } finally {
-      setSavingEmergencyStop(false);
-    }
-  };
 
   const handlePublishDraft = async () => {
     if (!draftPolicy) return;
@@ -227,88 +158,6 @@ export function KnowledgeView({ orgId, canManage, showToast }: KnowledgeViewProp
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8" data-testid="knowledge-view">
-      {/* 1. AI Automation Bot Configuration Card */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Cpu className="size-5 text-primary" />
-              <CardTitle className="text-xl font-bold">AI Automation</CardTitle>
-            </div>
-            <CardDescription>
-              OFF disables AI, DRAFT requires human approval, and AUTO may send only grounded,
-              policy-eligible replies through the standard WhatsApp delivery queue.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {botConfig ? (
-            <div className="space-y-3">
-              <div className="space-y-2 max-w-md">
-                <Label htmlFor="bot-mode">Bot mode</Label>
-                <select
-                  id="bot-mode"
-                  value={selectedMode}
-                  disabled={!canManage || savingMode || botConfig.emergencyDisabled}
-                  onChange={(e) => setSelectedMode(e.target.value as "off" | "draft" | "auto")}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                >
-                  <option value="off">OFF — no AI generation</option>
-                  <option value="draft">DRAFT — human review required</option>
-                  <option value="auto">AUTO — eligible replies send automatically</option>
-                </select>
-              </div>
-
-              {selectedMode === "auto" && !botConfig.emergencyDisabled && (
-                <p role="alert" className="text-xs text-warning-foreground font-medium">
-                  AUTO is opt-in. Low-confidence, stale, paused, assigned, disabled, or
-                  out-of-window conversations remain blocked.
-                </p>
-              )}
-              {botConfig.emergencyDisabled && (
-                <p role="alert" className="text-xs text-destructive font-medium">
-                  Emergency stop is active. Pending and new automated sends are blocked while manual
-                  agent replies remain available.
-                </p>
-              )}
-
-              {canManage && (
-                <div className="flex flex-wrap gap-3 pt-2">
-                  <Button
-                    type="button"
-                    disabled={
-                      savingMode || botConfig.emergencyDisabled || selectedMode === botConfig.mode
-                    }
-                    onClick={() => void saveMode()}
-                    className="cursor-pointer"
-                  >
-                    {savingMode ? "Saving…" : `Save ${selectedMode.toUpperCase()} mode`}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={botConfig.emergencyDisabled ? "default" : "destructive"}
-                    data-testid="automation-emergency-stop"
-                    disabled={savingEmergencyStop}
-                    onClick={() => void toggleEmergencyStop()}
-                    className="cursor-pointer"
-                  >
-                    {savingEmergencyStop
-                      ? "Updating…"
-                      : botConfig.emergencyDisabled
-                        ? "Resume automation"
-                        : "Emergency stop"}
-                  </Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <p role="status" className="text-sm text-muted-foreground">
-              Loading bot configuration…
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
       {/* 2. Automation Policy Configuration & Simulator */}
       <Card data-testid="automation-policy-section">
         <CardHeader className="flex flex-row items-center justify-between pb-4">

@@ -30,7 +30,7 @@ export function AppShell({ children }: AppShellProps) {
     >
       {/* Desktop Sidebar (Permanent, >= 1024px) */}
       <div className="hidden lg:flex shrink-0 h-full">
-        <AppSidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed((prev) => !prev)} />
+        <AppSidebar collapsed={collapsed} />
       </div>
 
       {/* Mobile Slide-out Drawer (< 1024px) */}
@@ -56,7 +56,11 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Main Column: Header + Routed View Content */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
-        <Header onOpenMobileNav={() => setMobileOpen(true)} />
+        <Header
+          onOpenMobileNav={() => setMobileOpen(true)}
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed((prev) => !prev)}
+        />
 
         {/* Global Toast Banners */}
         {errorMsg && (
