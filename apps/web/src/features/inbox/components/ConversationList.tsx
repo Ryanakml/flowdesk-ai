@@ -120,7 +120,7 @@ export function ConversationList({
 
       {/* Status Filter Tabs */}
       <div
-        className="flex-shrink-0 px-3 py-1.5 border-b border-border flex gap-1 overflow-x-auto scrollbar-none"
+        className="scrollbar-hidden flex-shrink-0 px-3 py-1.5 border-b border-border flex gap-1 overflow-x-auto"
         role="tablist"
         aria-label="Status filters"
       >
@@ -221,7 +221,11 @@ export function ConversationList({
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto" role="listbox" aria-label="Conversations">
+      <div
+        className="scrollbar-hidden flex-1 overflow-y-auto"
+        role="listbox"
+        aria-label="Conversations"
+      >
         {loading && conversations.length === 0 ? (
           <div className="p-3 space-y-3" data-testid="inbox-loading">
             {[1, 2, 3].map((i) => (

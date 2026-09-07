@@ -47,3 +47,14 @@ body {
     "rlig" 1,
     "calt" 1;
 }
+
+@layer utilities {
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}

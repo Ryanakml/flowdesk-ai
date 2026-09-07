@@ -1,5 +1,3 @@
-import { TrendingUp } from "lucide-react";
-import { Badge } from "@flowdesk/ui";
 import {
   Card,
   CardAction,
@@ -8,6 +6,7 @@ import {
   CardHeader,
   CardTitle
 } from "../../../components/ui/card.js";
+import { MetricLabel } from "../../../components/MetricLabel.js";
 
 export interface AnalyticsOverviewData {
   totalConversations: number;
@@ -27,23 +26,23 @@ export interface AnalyticsOverviewData {
 
 export function SectionCards({ overview }: { overview: AnalyticsOverviewData }) {
   return (
-    <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
       {/* Total Conversations */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>TOTAL CONVERSATIONS</CardDescription>
+          <CardDescription>
+            <MetricLabel
+              label="TOTAL CONVERSATIONS"
+              explanation="Unique conversations created during the selected period."
+            />
+          </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {overview.totalConversations}
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">
-              <TrendingUp className="size-3 mr-1" />
-              Active
-            </Badge>
-          </CardAction>
+          <CardAction />
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium text-emerald-600 dark:text-emerald-400">
+          <div className="line-clamp-1 flex gap-2 font-medium text-success">
             {overview.resolvedConversations} resolved ({overview.openConversations} active)
           </div>
           <div className="text-muted-foreground text-xs">
@@ -55,13 +54,16 @@ export function SectionCards({ overview }: { overview: AnalyticsOverviewData }) 
       {/* Bot Automation Rate */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>BOT AUTOMATION RATE</CardDescription>
+          <CardDescription>
+            <MetricLabel
+              label="BOT AUTOMATION RATE"
+              explanation="Share of outbound messages handled by the bot during the selected period."
+            />
+          </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">
             {overview.botAutomationRate}%
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">AI Copilot</Badge>
-          </CardAction>
+          <CardAction />
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
@@ -74,13 +76,16 @@ export function SectionCards({ overview }: { overview: AnalyticsOverviewData }) 
       {/* SLA Compliance Rate */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>SLA COMPLIANCE</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-emerald-600 dark:text-emerald-400">
+          <CardDescription>
+            <MetricLabel
+              label="SLA COMPLIANCE"
+              explanation="Percentage of conversations meeting the configured response and resolution targets."
+            />
+          </CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-success">
             {overview.slaMetPercentage}%
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">Target 95%</Badge>
-          </CardAction>
+          <CardAction />
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
@@ -93,13 +98,16 @@ export function SectionCards({ overview }: { overview: AnalyticsOverviewData }) 
       {/* Avg Resolution Speed */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>AVG RESOLUTION TIME</CardDescription>
+          <CardDescription>
+            <MetricLabel
+              label="AVG RESOLUTION TIME"
+              explanation="Average time from conversation start until resolution."
+            />
+          </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {Math.round(overview.avgResolutionTimeSeconds / 60)}m
           </CardTitle>
-          <CardAction>
-            <Badge variant="outline">Operator Speed</Badge>
-          </CardAction>
+          <CardAction />
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">

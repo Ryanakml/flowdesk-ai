@@ -16,7 +16,7 @@ import {
   useDefaultLayout
 } from "react-resizable-panels";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@flowdesk/ui";
-import { PanelRightOpen, ArrowLeft } from "lucide-react";
+import { PanelRightOpen, ArrowLeft, Sparkles } from "lucide-react";
 
 import {
   listConversations,
@@ -157,6 +157,7 @@ export function InboxWorkspace({
   const [showCitations, setShowCitations] = useState(false);
   const [isApprovingSend, setIsApprovingSend] = useState(false);
   const [copilotEditingRunId, setCopilotEditingRunId] = useState<string | null>(null);
+  const [showDraftModal, setShowDraftModal] = useState(false);
 
   // 7. Responsive Layout / Sheet State
   const [tabletContextOpen, setTabletContextOpen] = useState(false);
@@ -166,6 +167,10 @@ export function InboxWorkspace({
   const [isTablet, setIsTablet] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth >= 768 && window.innerWidth < 1024 : false
   );
+  const [contextCollapsed, setContextCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem("flowdesk-inbox-context-collapsed") === "true";
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -177,6 +182,10 @@ export function InboxWorkspace({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    window.sessionStorage?.setItem("flowdesk-inbox-context-collapsed", String(contextCollapsed));
+  }, [contextCollapsed]);
 
   // 8. Desktop 3-pane layout persistence
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
@@ -748,6 +757,7 @@ export function InboxWorkspace({
       const draft = await generateBotDraft(organizationId, activeConversation.id, fetcher);
       setCopilotDraft(draft);
       setCopilotLoading(draft.status === "queued" || draft.status === "processing");
+      setShowDraftModal(true);
     } catch (err: unknown) {
       setCopilotError(err instanceof Error ? err.message : "draft_error");
       setCopilotLoading(false);
@@ -767,6 +777,7 @@ export function InboxWorkspace({
       if (!sent) throw new Error("Approval did not create an outbound message.");
       setMessages((prev) => [...prev.filter((message) => message.id !== sent.id), sent]);
       setCopilotDraft(null);
+      setShowDraftModal(false);
       setShowCitations(false);
       setConversations((prev) =>
         prev.map((c) =>
@@ -785,6 +796,7 @@ export function InboxWorkspace({
     setComposerText(copilotDraft.suggestedContent);
     setCopilotEditingRunId(copilotDraft.runId);
     setShowCitations(false);
+    setShowDraftModal(false);
   };
 
   const handleCopilotReject = async () => {
@@ -798,6 +810,7 @@ export function InboxWorkspace({
         fetcher
       );
       setCopilotDraft(null);
+      setShowDraftModal(false);
       setCopilotEditingRunId(null);
       setCopilotError(null);
       setShowCitations(false);
@@ -862,6 +875,8 @@ export function InboxWorkspace({
               canAssign={canAssign}
               canResolve={canResolve}
               onAssignToMe={() => void handleAssignToMe()}
+              contextCollapsed={contextCollapsed}
+              onToggleContext={() => setContextCollapsed((value) => !value)}
               onResolve={() => void handleUpdateStatus("resolved")}
               onReopen={() => void handleUpdateStatus("open")}
             />
@@ -888,21 +903,15 @@ export function InboxWorkspace({
           }
         />
 
-        {/* AI Copilot Card */}
-        {copilotDraft && (
-          <AiDraftCard
-            draft={copilotDraft}
-            loading={copilotLoading}
-            error={copilotError}
-            showCitations={showCitations}
-            isApproving={isApprovingSend}
-            canSend={canSend}
-            onGenerate={() => void handleGenerateDraft()}
-            onApprove={() => void handleCopilotApprove()}
-            onEdit={handleCopilotEdit}
-            onReject={() => void handleCopilotReject()}
-            onToggleCitations={() => setShowCitations((prev) => !prev)}
-          />
+        {copilotLoading && (
+          <div
+            className="flex items-center gap-2 border-t border-border px-4 py-2 text-xs text-muted-foreground"
+            role="status"
+            data-testid="bot-generating-indicator"
+          >
+            <Sparkles className="size-3.5 animate-pulse text-primary" /> Bot generating{" "}
+            <span aria-hidden="true">•••</span>
+          </div>
         )}
 
         {/* Message Composer */}
@@ -918,6 +927,7 @@ export function InboxWorkspace({
           mediaState={mediaState}
           onComposerChange={setComposerText}
           onSend={() => void handleSendMessage()}
+          onGenerateDraft={() => void handleGenerateDraft()}
           onOpenTemplate={() => void handleOpenTemplateModal()}
           onMediaSelected={(f) => void handleMediaSelected(f)}
         />
@@ -936,7 +946,7 @@ export function InboxWorkspace({
           className={`px-3 py-1 text-xs text-center font-medium ${
             connectionState === "offline"
               ? "bg-destructive text-destructive-foreground"
-              : "bg-yellow-500 text-white"
+              : "bg-warning text-warning-foreground"
           }`}
           role="status"
           aria-live="polite"
@@ -949,14 +959,14 @@ export function InboxWorkspace({
       {/* Conflict Banner */}
       {hasConflict && (
         <div
-          className="px-3 py-1.5 bg-yellow-50 dark:bg-yellow-950/40 text-yellow-800 dark:text-yellow-200 border-b border-yellow-200 dark:border-yellow-900 flex items-center justify-between text-xs"
+          className="px-3 py-1.5 bg-warning/10 text-warning-foreground border-b border-warning/30 flex items-center justify-between text-xs"
           role="alert"
           data-testid="conflict-state"
         >
           <span>This conversation was updated elsewhere. Reload to view the latest version.</span>
           <button
             type="button"
-            className="px-2 py-0.5 rounded bg-yellow-200 dark:bg-yellow-800 text-yellow-900 dark:text-yellow-100 hover:bg-yellow-300 font-medium"
+            className="px-2 py-0.5 rounded bg-warning/20 text-warning-foreground hover:bg-warning/30 font-medium"
             onClick={() => void handleConflictReload()}
           >
             Reload
@@ -984,7 +994,7 @@ export function InboxWorkspace({
       {/* Action Success Toast */}
       {actionSuccess && (
         <div
-          className="px-3 py-1.5 bg-green-500/10 text-green-700 dark:text-green-300 border-b border-green-500/20 text-xs text-center"
+          className="px-3 py-1.5 bg-success/10 text-success border-b border-success/20 text-xs text-center"
           role="status"
         >
           {actionSuccess}
@@ -1189,36 +1199,40 @@ export function InboxWorkspace({
             {/* Center Panel: Stream & Composer */}
             <Panel
               id="inbox-thread"
-              defaultSize="52%"
+              defaultSize={contextCollapsed ? "76%" : "52%"}
               minSize="36%"
-              maxSize="60%"
+              maxSize={contextCollapsed ? "80%" : "60%"}
               className="h-full min-h-0 min-w-0 overflow-hidden"
             >
               {renderCenterPane()}
             </Panel>
 
-            <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
+            {!contextCollapsed && (
+              <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
+            )}
 
             {/* Right Panel: Customer & Operational Context */}
-            <Panel
-              id="inbox-context"
-              defaultSize="24%"
-              minSize="20%"
-              maxSize="32%"
-              className="h-full min-h-0 min-w-0 overflow-hidden"
-            >
-              <CustomerContextPanel
-                conversation={activeConversation}
-                notes={notes}
-                tags={conversationTags}
-                allTags={resources.tags}
-                copilotDraft={copilotDraft}
-                showCitations={showCitations}
-                loading={loadingThread}
-                onToggleTag={(tagId, applied) => void handleToggleTag(tagId, applied)}
-                onAddNote={(body) => void handleAddNote(body)}
-              />
-            </Panel>
+            {!contextCollapsed && (
+              <Panel
+                id="inbox-context"
+                defaultSize="24%"
+                minSize="20%"
+                maxSize="32%"
+                className="h-full min-h-0 min-w-0 overflow-hidden"
+              >
+                <CustomerContextPanel
+                  conversation={activeConversation}
+                  notes={notes}
+                  tags={conversationTags}
+                  allTags={resources.tags}
+                  copilotDraft={copilotDraft}
+                  showCitations={showCitations}
+                  loading={loadingThread}
+                  onToggleTag={(tagId, applied) => void handleToggleTag(tagId, applied)}
+                  onAddNote={(body) => void handleAddNote(body)}
+                />
+              </Panel>
+            )}
           </PanelGroup>
         )}
       </div>
@@ -1244,6 +1258,23 @@ export function InboxWorkspace({
             setTemplateVariables((prev) => ({ ...prev, [varNum]: val }))
           }
           onSend={() => void handleSendTemplate()}
+        />
+      )}
+      {copilotDraft && (
+        <AiDraftCard
+          draft={copilotDraft}
+          loading={copilotLoading}
+          error={copilotError}
+          showCitations={showCitations}
+          isApproving={isApprovingSend}
+          canSend={canSend}
+          open={showDraftModal}
+          onOpenChange={setShowDraftModal}
+          onGenerate={() => void handleGenerateDraft()}
+          onApprove={() => void handleCopilotApprove()}
+          onEdit={handleCopilotEdit}
+          onReject={() => void handleCopilotReject()}
+          onToggleCitations={() => setShowCitations((prev) => !prev)}
         />
       )}
     </div>

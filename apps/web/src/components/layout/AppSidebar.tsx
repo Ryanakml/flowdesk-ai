@@ -30,8 +30,8 @@ export function FlowDeskIcon({ size = 20 }: { size?: number }) {
           y2="28"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0%" stopColor="#10B981" />
-          <stop offset="100%" stopColor="#0EA5E9" />
+          <stop offset="0%" stopColor="var(--success)" />
+          <stop offset="100%" stopColor="var(--primary)" />
         </linearGradient>
       </defs>
       <path
@@ -107,17 +107,15 @@ export function AppSidebar({
         } ${className}`}
         data-testid="app-sidebar"
       >
-        {/* Sidebar Header: Brand & Collapse Toggle */}
-        <div className="flex flex-none items-center justify-between p-3">
+        {/* Sidebar Header: organization mark, brand, and collapse toggle */}
+        <div className="flex flex-none items-center gap-2 p-3">
+          <OrgSwitcher collapsed compact />
           <Link
             to="/inbox"
             onClick={() => onNavigate?.()}
             className="flex items-center gap-2 font-bold text-foreground tracking-tight hover:opacity-90 transition-opacity pl-1"
             data-testid="brand-logo"
           >
-            <span className="flex items-center justify-center p-1 rounded-md bg-muted/40">
-              <FlowDeskIcon size={20} />
-            </span>
             {!collapsed && <span className="text-[15px] font-semibold">FlowDesk</span>}
           </Link>
           {onToggleCollapse && (
@@ -125,7 +123,7 @@ export function AppSidebar({
               variant="ghost"
               size="sm"
               onClick={onToggleCollapse}
-              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              className="ml-auto h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
               aria-label="Toggle sidebar collapse"
               data-testid="sidebar-collapse-button"
             >
@@ -138,13 +136,8 @@ export function AppSidebar({
           )}
         </div>
 
-        {/* Workspace / Organization Switcher */}
-        <div className="flex-none px-3 pb-2 pt-1">
-          <OrgSwitcher collapsed={collapsed} />
-        </div>
-
         {/* Navigation Groups Container */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        <div className="scrollbar-hidden min-h-0 flex-1 overflow-y-auto px-3 py-4 space-y-6">
           {navigationGroups.map((group) => {
             const visibleItems = group.items.filter((item) => {
               if (item.permission) {

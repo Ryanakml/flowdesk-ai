@@ -8,16 +8,19 @@ import {
   verifyChannelApi,
   type ChannelClientRecord
 } from "./api.js";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card.js";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "./components/ui/card.js";
-import { Badge, Button } from "@flowdesk/ui";
-import { MessageSquare, Plus, Zap } from "lucide-react";
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@flowdesk/ui";
+import { Plus, Zap } from "lucide-react";
+import { ConfirmDialog } from "./components/ConfirmDialog.js";
+import { StatusDot } from "./components/StatusDot.js";
 
 interface FacebookSdk {
   init(config: { appId: string; cookie: boolean; xfbml: boolean; version: string }): void;
@@ -87,6 +90,8 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
     accessToken: ""
   });
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [disconnectId, setDisconnectId] = useState<string | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
   const pendingSignup = useRef<PendingSignup | null>(null);
 
   const loadChannels = useCallback(async () => {
@@ -258,20 +263,18 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
     }
   };
 
-  const handleDelete = async (channelId: string) => {
-    if (
-      !window.confirm(
-        "Disconnect this WhatsApp channel? Existing conversation history will remain."
-      )
-    ) {
-      return;
-    }
+  const handleDelete = async () => {
+    if (!disconnectId) return;
     try {
-      await deleteChannelApi(orgId, channelId);
+      setDisconnecting(true);
+      await deleteChannelApi(orgId, disconnectId);
       showToast("Channel disconnected successfully.");
+      setDisconnectId(null);
       await loadChannels();
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to disconnect channel", true);
+    } finally {
+      setDisconnecting(false);
     }
   };
 
@@ -282,10 +285,7 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <MessageSquare className="size-6 text-primary" />
-            WhatsApp Channels
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">WhatsApp Channels</h2>
           <p className="text-sm text-muted-foreground">
             Connect with a Meta access token and FlowDesk will verify the phone number, subscribe
             the WABA, and encrypt the credential before activating the channel.
@@ -317,110 +317,114 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
         )}
       </div>
 
-      {canManage && showManualConnect && (
-        <Card className="border-border">
-          <CardHeader>
-            <CardTitle className="text-base font-semibold">
-              Connect with verified credentials
-            </CardTitle>
-            <CardDescription>
-              Use credentials from the same Meta App configured for the FlowDesk webhook. The access
-              token is never returned by the API.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={(event) => void handleManualConnect(event)}
-              className="card grid gap-4 md:grid-cols-2"
-              aria-label="Connect WhatsApp with access token"
-            >
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">
-                  Channel name
-                  <input
-                    required
-                    maxLength={100}
-                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    value={manualConnection.name}
-                    onChange={(event) =>
-                      setManualConnection((current) => ({ ...current, name: event.target.value }))
-                    }
-                  />
-                </label>
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">
-                  Phone Number ID
-                  <input
-                    required
-                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    value={manualConnection.phoneNumberId}
-                    onChange={(event) =>
-                      setManualConnection((current) => ({
-                        ...current,
-                        phoneNumberId: event.target.value
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">
-                  WABA ID
-                  <input
-                    required
-                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    value={manualConnection.wabaId}
-                    onChange={(event) =>
-                      setManualConnection((current) => ({ ...current, wabaId: event.target.value }))
-                    }
-                  />
-                </label>
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-foreground">
-                  Access token
-                  <input
-                    required
-                    type="password"
-                    autoComplete="off"
-                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    value={manualConnection.accessToken}
-                    onChange={(event) =>
-                      setManualConnection((current) => ({
-                        ...current,
-                        accessToken: event.target.value
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-              <div className="flex gap-2 pt-2 md:col-span-2">
-                <Button type="submit" className="cursor-pointer" disabled={connecting}>
-                  {connecting ? "Verifying and connecting..." : "Verify and connect"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="cursor-pointer"
-                  onClick={() => setShowManualConnect(false)}
-                  disabled={connecting}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+      {canManage && (
+        <Dialog open={showManualConnect} onOpenChange={setShowManualConnect}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Connect WhatsApp</DialogTitle>
+              <DialogDescription>
+                Use credentials from the same Meta App configured for the FlowDesk webhook. The
+                access token is never returned by the API.
+              </DialogDescription>
+            </DialogHeader>
+            {showManualConnect && (
+              <form
+                onSubmit={(event) => void handleManualConnect(event)}
+                className="grid gap-4 md:grid-cols-2"
+                aria-label="Connect WhatsApp with access token"
+              >
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-foreground">
+                    Channel name
+                    <input
+                      required
+                      maxLength={100}
+                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      value={manualConnection.name}
+                      onChange={(event) =>
+                        setManualConnection((current) => ({ ...current, name: event.target.value }))
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-foreground">
+                    Phone Number ID
+                    <input
+                      required
+                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      value={manualConnection.phoneNumberId}
+                      onChange={(event) =>
+                        setManualConnection((current) => ({
+                          ...current,
+                          phoneNumberId: event.target.value
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-foreground">
+                    WABA ID
+                    <input
+                      required
+                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      value={manualConnection.wabaId}
+                      onChange={(event) =>
+                        setManualConnection((current) => ({
+                          ...current,
+                          wabaId: event.target.value
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-foreground">
+                    Access token
+                    <input
+                      required
+                      type="password"
+                      autoComplete="off"
+                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      value={manualConnection.accessToken}
+                      onChange={(event) =>
+                        setManualConnection((current) => ({
+                          ...current,
+                          accessToken: event.target.value
+                        }))
+                      }
+                    />
+                  </label>
+                </div>
+                <DialogFooter className="gap-2 pt-2 md:col-span-2">
+                  <Button type="submit" className="cursor-pointer" disabled={connecting}>
+                    {connecting ? "Verifying and connecting..." : "Verify and connect"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="cursor-pointer"
+                    onClick={() => setShowManualConnect(false)}
+                    disabled={connecting}
+                  >
+                    Cancel
+                  </Button>
+                </DialogFooter>
+              </form>
+            )}
+            <div className="border-t border-border pt-3 text-sm text-muted-foreground">
+              Prefer a guided setup? Close this dialog and choose{" "}
+              <span className="font-medium text-foreground">Connect with Meta Signup</span>.
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {loading ? (
         <Card className="p-8 text-center text-muted-foreground">Loading connected channels...</Card>
       ) : channels.length === 0 ? (
         <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
-          <div className="rounded-full bg-muted p-3 mb-3">
-            <MessageSquare className="size-6 text-muted-foreground" />
-          </div>
           <CardTitle className="text-base mb-1">No WhatsApp channels connected yet.</CardTitle>
           <CardDescription className="mb-4">
             Connect a WhatsApp business account to start receiving and sending customer messages.
@@ -446,30 +450,31 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="min-w-0">
-                    <CardTitle className="break-words text-base font-semibold">
-                      {channel.name}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="break-words text-base font-semibold">
+                        {channel.name}
+                      </CardTitle>
+                      <StatusDot
+                        state={
+                          channel.status === "active"
+                            ? "active"
+                            : channel.status === "disconnected"
+                              ? "disconnected"
+                              : channel.status === "degraded" || channel.status === "pending"
+                                ? "degraded"
+                                : "inactive"
+                        }
+                      />
+                    </div>
                     <span className="text-xs text-muted-foreground font-mono">
-                      Type: {channel.type.toUpperCase()}
+                      {channel.type.toUpperCase()}
                     </span>
                   </div>
-                  <Badge
-                    variant={channel.status === "active" ? "default" : "outline"}
-                    className={
-                      channel.status === "active"
-                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                        : "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
-                    }
-                  >
-                    {channel.status.toUpperCase()}
-                  </Badge>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm text-muted-foreground pb-4">
                 {channel.statusReason && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                    {channel.statusReason}
-                  </p>
+                  <p className="text-xs text-warning font-medium">{channel.statusReason}</p>
                 )}
                 <div className="min-w-0 space-y-1 font-mono text-xs">
                   <p className="break-all">
@@ -483,7 +488,7 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                 </div>
               </CardContent>
               {canManage && (
-                <CardFooter className="flex flex-col items-stretch gap-2 border-t pt-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <div className="flex flex-col items-stretch gap-2 px-6 pb-6 pt-1 sm:flex-row sm:flex-wrap sm:items-center">
                   <Button
                     type="button"
                     variant="outline"
@@ -508,17 +513,28 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => void handleDelete(channel.id)}
-                    className="text-destructive hover:bg-destructive/10 cursor-pointer sm:ml-auto"
+                    onClick={() => setDisconnectId(channel.id)}
+                    className="border border-destructive text-destructive hover:bg-destructive/10 cursor-pointer sm:ml-auto"
                   >
                     Disconnect
                   </Button>
-                </CardFooter>
+                </div>
               )}
             </Card>
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={disconnectId !== null}
+        onOpenChange={(open) => {
+          if (!open && !disconnecting) setDisconnectId(null);
+        }}
+        title="Disconnect WhatsApp channel?"
+        description="Existing conversation history will remain, but this channel will stop receiving and sending messages until it is connected again."
+        confirmLabel="Disconnect"
+        pending={disconnecting}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

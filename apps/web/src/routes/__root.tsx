@@ -86,6 +86,7 @@ function RootComponent() {
     else if (pathname.startsWith("/developer")) title = "FlowDesk — Developer APIs";
     else if (pathname.startsWith("/team")) title = "FlowDesk — Team Settings";
     else if (pathname.startsWith("/audit")) title = "FlowDesk — Audit Log";
+    else if (pathname.startsWith("/profile")) title = "FlowDesk — Profile";
     else if (pathname.startsWith("/settings/workspace")) title = "FlowDesk — Workspace";
     document.title = title;
   }, [pathname]);

@@ -94,7 +94,7 @@ export function AppShell({ children }: AppShellProps) {
 
         {/* Main Routed Content Area */}
         <main
-          className={`flex-1 min-w-0 bg-background ${isInboxRoute ? "overflow-hidden" : "overflow-y-auto"}`}
+          className={`scrollbar-hidden flex-1 min-w-0 bg-background ${isInboxRoute ? "overflow-hidden" : "overflow-y-auto"}`}
           id="main-content"
           data-testid="main-content"
         >

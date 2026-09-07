@@ -15,7 +15,8 @@ import {
 } from "./api.js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card.js";
 import { Badge, Button } from "@flowdesk/ui";
-import { Code, Key, Webhook, Copy } from "lucide-react";
+import { Key, Webhook, Copy, Trash2 } from "lucide-react";
+import { ConfirmDialog } from "./components/ConfirmDialog.js";
 
 export interface DeveloperSettingsViewProps {
   orgId: string;
@@ -34,16 +35,16 @@ const CANONICAL_KEY_SCOPES = ["conversation:read", "message:write"] as const;
 const DEFAULT_WEBHOOK_EVENTS = ["conversation.created", "message.received"];
 
 function verificationBadgeClass(status: WebhookVerificationStatus): string {
-  if (status === "verified") return "bg-green-100 text-green-800";
-  if (status === "failed") return "bg-red-100 text-red-800";
-  return "bg-amber-100 text-amber-800";
+  if (status === "verified") return "bg-success/15 text-success";
+  if (status === "failed") return "bg-destructive/15 text-destructive";
+  return "bg-warning/15 text-warning-foreground";
 }
 
 function deliveryBadgeClass(status: WebhookDeliveryClientRecord["status"]): string {
-  if (status === "delivered") return "bg-green-100 text-green-800";
-  if (status === "dead_letter") return "bg-red-100 text-red-800";
-  if (status === "failed") return "bg-amber-100 text-amber-800";
-  return "bg-gray-100 text-gray-700";
+  if (status === "delivered") return "bg-success/15 text-success";
+  if (status === "dead_letter") return "bg-destructive/15 text-destructive";
+  if (status === "failed") return "bg-warning/15 text-warning-foreground";
+  return "bg-muted text-muted-foreground";
 }
 
 export function DeveloperSettingsView({
@@ -86,6 +87,11 @@ export function DeveloperSettingsView({
   >({});
 
   const [submitting, setSubmitting] = useState(false);
+  const [pendingAction, setPendingAction] = useState<{
+    type: "revoke" | "clear-key" | "delete-webhook";
+    id: string;
+  } | null>(null);
+  const [pendingActionLoading, setPendingActionLoading] = useState(false);
 
   const fetchKeys = async (): Promise<DeveloperApiKeyRecord[]> => {
     try {
@@ -162,12 +168,6 @@ export function DeveloperSettingsView({
   };
 
   const handleRevokeKey = async (keyId: string) => {
-    if (
-      !window.confirm("Are you sure you want to revoke this API key? This action cannot be undone.")
-    ) {
-      return;
-    }
-
     try {
       await revokeApiKeyApi(orgId, keyId);
       showToast?.("API Key revoked", "info");
@@ -175,6 +175,11 @@ export function DeveloperSettingsView({
     } catch (err) {
       showToast?.(err instanceof Error ? err.message : "Failed to revoke API key", "error");
     }
+  };
+
+  const handleClearRevokedKey = (keyId: string) => {
+    setKeys((current) => current.filter((key) => key.id !== keyId));
+    showToast?.("Revoked API key cleared from this view", "info");
   };
 
   const handleCreateWebhook = async (event: React.FormEvent) => {
@@ -243,8 +248,6 @@ export function DeveloperSettingsView({
   };
 
   const handleDeleteWebhook = async (webhookId: string) => {
-    if (!window.confirm("Are you sure you want to delete this webhook subscription?")) return;
-
     try {
       await deleteWebhookApi(orgId, webhookId);
       showToast?.("Webhook subscription deleted", "info");
@@ -252,6 +255,19 @@ export function DeveloperSettingsView({
       await fetchWebhooks();
     } catch (err) {
       showToast?.(err instanceof Error ? err.message : "Failed to delete webhook", "error");
+    }
+  };
+
+  const confirmPendingAction = async () => {
+    if (!pendingAction) return;
+    setPendingActionLoading(true);
+    try {
+      if (pendingAction.type === "revoke") await handleRevokeKey(pendingAction.id);
+      if (pendingAction.type === "clear-key") handleClearRevokedKey(pendingAction.id);
+      if (pendingAction.type === "delete-webhook") await handleDeleteWebhook(pendingAction.id);
+      setPendingAction(null);
+    } finally {
+      setPendingActionLoading(false);
     }
   };
 
@@ -277,7 +293,6 @@ export function DeveloperSettingsView({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <Code className="size-6 text-primary" />
             Developer Integrations
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -313,7 +328,7 @@ export function DeveloperSettingsView({
       </div>
 
       {generatedRawKey && (
-        <Card className="border-amber-400 bg-amber-50/70 text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200">
+        <Card className="border-warning/40 bg-warning/10 text-foreground">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <CardTitle className="text-base font-semibold">
@@ -327,7 +342,7 @@ export function DeveloperSettingsView({
                 Close ✕
               </button>
             </div>
-            <CardDescription className="text-xs text-amber-800 dark:text-amber-300">
+            <CardDescription className="text-xs text-warning-foreground">
               Copy this key now. It will never be displayed again.
             </CardDescription>
           </CardHeader>
@@ -355,7 +370,7 @@ export function DeveloperSettingsView({
       )}
 
       {generatedWebhookSecret && (
-        <Card className="border-amber-400 bg-amber-50/70 text-amber-950 dark:border-amber-500/30 dark:bg-amber-950/20 dark:text-amber-200">
+        <Card className="border-warning/40 bg-warning/10 text-foreground">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <CardTitle className="text-base font-semibold">
@@ -369,7 +384,7 @@ export function DeveloperSettingsView({
                 Close ✕
               </button>
             </div>
-            <CardDescription className="text-xs text-amber-800 dark:text-amber-300">
+            <CardDescription className="text-xs text-warning-foreground">
               Signing secret for {generatedWebhookSecret.name}. Copy it now; FlowDesk will only show
               the masked value later.
             </CardDescription>
@@ -417,13 +432,10 @@ export function DeveloperSettingsView({
             <Card className="p-8 text-center text-muted-foreground">Loading API keys...</Card>
           ) : keys.length === 0 ? (
             <Card className="flex flex-col items-center justify-center p-12 text-center border-dashed">
-              <div className="rounded-full bg-muted p-3 mb-3">
-                <Key className="size-6 text-muted-foreground" />
-              </div>
-              <CardTitle className="text-base mb-1">No API keys created yet.</CardTitle>
+              <CardTitle className="text-base mb-1">No API keys yet</CardTitle>
+              <span className="sr-only">No API keys created yet.</span>
               <CardDescription className="mb-4">
-                Generate API keys to grant external services programmatic access to your FlowDesk
-                workspace.
+                Create a scoped API key to access FlowDesk programmatically.
               </CardDescription>
               {canManage && (
                 <Button
@@ -440,46 +452,60 @@ export function DeveloperSettingsView({
           ) : (
             <div className="space-y-3">
               {keys.map((key) => (
-                <Card key={key.id} className="min-w-0 border-border p-4">
+                <Card key={key.id} className="min-w-0 border-border p-5 sm:p-6">
                   <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="mb-1 flex items-center gap-2">
                         <h4 className="min-w-0 break-words font-semibold text-foreground">
                           {key.name}
                         </h4>
-                        <Badge
-                          variant={key.revokedAt ? "destructive" : "default"}
+                        <span
                           className={
                             key.revokedAt
-                              ? "border-destructive/20 bg-destructive/15 text-destructive"
-                              : "border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                              ? "text-xs font-medium text-destructive"
+                              : "text-xs font-medium text-success"
                           }
                         >
-                          {key.revokedAt ? "REVOKED" : "ACTIVE"}
-                        </Badge>
+                          {key.revokedAt ? "Revoked" : "Active"}
+                        </span>
                       </div>
-                      <p className="mb-2 break-all text-xs font-mono text-muted-foreground">
+                      <p className="mb-4 break-all text-xs font-mono text-muted-foreground">
                         Prefix: {key.keyPrefix}••••••••
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {key.scopes.map((scope) => (
-                          <Badge
-                            key={scope}
-                            variant="outline"
-                            className="bg-muted/50 text-xs font-mono"
-                          >
-                            {scope}
-                          </Badge>
-                        ))}
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                          Access
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {key.scopes.map((scope) => (
+                            <Badge
+                              key={scope}
+                              variant="outline"
+                              className="bg-muted/50 text-xs font-mono"
+                            >
+                              {scope}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     {canManage && !key.revokedAt && (
                       <button
                         type="button"
                         className="btn btn-danger btn-sm shrink-0 self-start text-destructive hover:bg-destructive/10 cursor-pointer"
-                        onClick={() => void handleRevokeKey(key.id)}
+                        onClick={() => setPendingAction({ type: "revoke", id: key.id })}
                       >
-                        Revoke Key
+                        Revoke
+                      </button>
+                    )}
+                    {key.revokedAt && (
+                      <button
+                        type="button"
+                        className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => setPendingAction({ type: "clear-key", id: key.id })}
+                        aria-label={`Clear revoked key ${key.name}`}
+                      >
+                        <Trash2 className="size-4" />
                       </button>
                     )}
                   </div>
@@ -605,7 +631,9 @@ export function DeveloperSettingsView({
                             variant="ghost"
                             size="sm"
                             className="text-destructive hover:bg-destructive/10 cursor-pointer"
-                            onClick={() => void handleDeleteWebhook(webhook.id)}
+                            onClick={() =>
+                              setPendingAction({ type: "delete-webhook", id: webhook.id })
+                            }
                           >
                             Delete
                           </Button>
@@ -796,6 +824,30 @@ export function DeveloperSettingsView({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingAction !== null}
+        onOpenChange={(open) => {
+          if (!open && !pendingActionLoading) setPendingAction(null);
+        }}
+        title={
+          pendingAction?.type === "revoke"
+            ? "Revoke API key?"
+            : pendingAction?.type === "clear-key"
+              ? "Remove revoked API key?"
+              : "Delete webhook subscription?"
+        }
+        description={
+          pendingAction?.type === "revoke"
+            ? "Requests using this key will immediately stop working."
+            : pendingAction?.type === "clear-key"
+              ? "This only clears the revoked key from the current view."
+              : "Future deliveries to this endpoint will stop and the subscription will be deleted."
+        }
+        confirmLabel={pendingAction?.type === "revoke" ? "Revoke Key" : "Confirm"}
+        pending={pendingActionLoading}
+        onConfirm={confirmPendingAction}
+      />
     </div>
   );
 }
