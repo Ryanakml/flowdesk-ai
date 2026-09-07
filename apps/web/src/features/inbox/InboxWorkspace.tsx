@@ -180,7 +180,10 @@ export function InboxWorkspace({
 
   // 8. Desktop 3-pane layout persistence
   const { defaultLayout, onLayoutChanged } = useDefaultLayout({
-    id: "flowdesk-inbox-panels",
+    // v2 intentionally invalidates layouts saved by the old numeric pixel
+    // configuration. Panel sizes below use explicit percentage strings.
+    id: "flowdesk-inbox-panels-v2",
+    panelIds: ["inbox-queue", "inbox-thread", "inbox-context"],
     ...(typeof window !== "undefined" && window.localStorage
       ? { storage: window.localStorage }
       : {})
@@ -836,7 +839,7 @@ export function InboxWorkspace({
     }
 
     return (
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
+      <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
         {/* Header */}
         <div className="flex min-w-0 shrink-0 items-center">
           {isMobile && (
@@ -1144,9 +1147,10 @@ export function InboxWorkspace({
           >
             {/* Left Panel: Conversation Queue */}
             <Panel
-              defaultSize={25}
-              minSize={18}
-              maxSize={35}
+              id="inbox-queue"
+              defaultSize="24%"
+              minSize="20%"
+              maxSize="32%"
               className="h-full min-h-0 min-w-0 overflow-hidden"
             >
               <ConversationList
@@ -1183,7 +1187,13 @@ export function InboxWorkspace({
             <PanelResizeHandle className="w-1 bg-border hover:bg-primary/50 transition-colors cursor-col-resize focus:outline-none" />
 
             {/* Center Panel: Stream & Composer */}
-            <Panel defaultSize={50} minSize={30} className="h-full min-h-0 min-w-0 overflow-hidden">
+            <Panel
+              id="inbox-thread"
+              defaultSize="52%"
+              minSize="36%"
+              maxSize="60%"
+              className="h-full min-h-0 min-w-0 overflow-hidden"
+            >
               {renderCenterPane()}
             </Panel>
 
@@ -1191,9 +1201,10 @@ export function InboxWorkspace({
 
             {/* Right Panel: Customer & Operational Context */}
             <Panel
-              defaultSize={25}
-              minSize={20}
-              maxSize={35}
+              id="inbox-context"
+              defaultSize="24%"
+              minSize="20%"
+              maxSize="32%"
               className="h-full min-h-0 min-w-0 overflow-hidden"
             >
               <CustomerContextPanel
