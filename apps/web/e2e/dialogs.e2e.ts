@@ -219,7 +219,9 @@ test("channel card copies IDs, reconnects, verifies and confirms disconnect", as
   await expectUnlocked(page);
   await card.getByRole("button", { name: "Test connection" }).click();
   await expect.poll(() => verified).toBe(1);
-  await expect(page.getByRole("status")).toContainText("healthy");
+  await expect(
+    page.getByRole("status").filter({ hasText: "WhatsApp API connection is healthy." })
+  ).toBeVisible();
   await card.getByRole("button", { name: "Disconnect", exact: true }).click();
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancel", exact: true }).click();
   expect(disconnected).toBe(false);
