@@ -71,7 +71,7 @@ function renderStatusCheckmark(msg: Message) {
 }
 
 function getAuthorType(msg: Message): AuthorType {
-  if (msg.senderType === "system" || msg.senderType === "bot") return "system";
+  if (msg.senderType === "system") return "system";
   if (msg.direction === "inbound") return "customer";
   if (msg.senderType === "agent") return "agent";
   return "agent";

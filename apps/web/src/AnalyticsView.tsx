@@ -8,6 +8,7 @@ import {
 } from "./api.js";
 import { SectionCards } from "./features/analytics/components/section-cards.js";
 import { ChartAreaInteractive } from "./features/analytics/components/chart-area-interactive.js";
+import { RecentChats } from "./features/analytics/components/recent-chats.js";
 
 export interface AnalyticsViewProps {
   orgId: string;
@@ -142,7 +143,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
             className="cursor-pointer"
           >
             <Download className="mr-2 size-4" />
-            {exporting ? "Generating CSV..." : "📥 Export Compliance CSV"}
+            {exporting ? "Generating CSV..." : "Export Compliance CSV"}
           </Button>
         </div>
       </div>
@@ -150,12 +151,14 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
       {/* KPI Cards transplanted from donor section cards */}
       <SectionCards overview={overview} />
 
-      {/* Interactive area chart transplanted from donor dashboard */}
-      <ChartAreaInteractive
-        volumeSeries={tableSeries}
-        timeRange={timeRange}
-        onTimeRangeChange={setTimeRange}
-      />
+      <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(17rem,1fr)]">
+        <ChartAreaInteractive
+          volumeSeries={tableSeries}
+          timeRange={timeRange}
+          onTimeRangeChange={setTimeRange}
+        />
+        <RecentChats orgId={orgId} />
+      </div>
 
       {/* Daily Volume & Breakdown Table */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-xs">

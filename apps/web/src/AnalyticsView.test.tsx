@@ -95,10 +95,10 @@ describe("AnalyticsView UI Component (M6-04)", () => {
     render(<AnalyticsView orgId={orgId} />);
 
     await waitFor(() => {
-      expect(screen.getByText("📥 Export Compliance CSV")).toBeDefined();
+      expect(screen.getByText("Export Compliance CSV")).toBeDefined();
     });
 
-    const exportBtn = screen.getByText("📥 Export Compliance CSV");
+    const exportBtn = screen.getByText("Export Compliance CSV");
     fireEvent.click(exportBtn);
 
     await waitFor(() => {
