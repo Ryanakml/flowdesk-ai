@@ -69,11 +69,11 @@ export function ProfileView() {
         pending={loggingOut}
         onConfirm={async () => {
           setLoggingOut(true);
+          setShowLogoutConfirm(false);
           try {
             await handleLogout();
           } finally {
             setLoggingOut(false);
-            setShowLogoutConfirm(false);
           }
         }}
       />
