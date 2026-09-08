@@ -17,6 +17,7 @@ import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as TeamRouteImport } from './routes/team'
+import { Route as ChannelsGuideRouteImport } from './routes/channels_.guide'
 import { Route as DeveloperApiKeysRouteImport } from './routes/developer.api-keys'
 import { Route as DeveloperWebhooksRouteImport } from './routes/developer.webhooks'
 import { Route as InboxConversationIdRouteImport } from './routes/inbox.$conversationId'
@@ -62,6 +63,11 @@ const TeamRoute = TeamRouteImport.update({
   path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChannelsGuideRoute = ChannelsGuideRouteImport.update({
+  id: '/channels_/guide',
+  path: '/channels/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeveloperApiKeysRoute = DeveloperApiKeysRouteImport.update({
   id: '/developer/api-keys',
   path: '/developer/api-keys',
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/knowledge': typeof KnowledgeRoute
   '/profile': typeof ProfileRoute
   '/team': typeof TeamRoute
+  '/channels/guide': typeof ChannelsGuideRoute
   '/developer/api-keys': typeof DeveloperApiKeysRoute
   '/developer/webhooks': typeof DeveloperWebhooksRoute
   '/inbox/$conversationId': typeof InboxConversationIdRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/knowledge': typeof KnowledgeRoute
   '/profile': typeof ProfileRoute
   '/team': typeof TeamRoute
+  '/channels/guide': typeof ChannelsGuideRoute
   '/developer/api-keys': typeof DeveloperApiKeysRoute
   '/developer/webhooks': typeof DeveloperWebhooksRoute
   '/inbox/$conversationId': typeof InboxConversationIdRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/knowledge': typeof KnowledgeRoute
   '/profile': typeof ProfileRoute
   '/team': typeof TeamRoute
+  '/channels_/guide': typeof ChannelsGuideRoute
   '/developer/api-keys': typeof DeveloperApiKeysRoute
   '/developer/webhooks': typeof DeveloperWebhooksRoute
   '/inbox/$conversationId': typeof InboxConversationIdRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/profile'
     | '/team'
+    | '/channels/guide'
     | '/developer/api-keys'
     | '/developer/webhooks'
     | '/inbox/$conversationId'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/profile'
     | '/team'
+    | '/channels/guide'
     | '/developer/api-keys'
     | '/developer/webhooks'
     | '/inbox/$conversationId'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/profile'
     | '/team'
+    | '/channels_/guide'
     | '/developer/api-keys'
     | '/developer/webhooks'
     | '/inbox/$conversationId'
@@ -180,6 +192,7 @@ export interface RootRouteChildren {
   KnowledgeRoute: typeof KnowledgeRoute
   ProfileRoute: typeof ProfileRoute
   TeamRoute: typeof TeamRoute
+  ChannelsGuideRoute: typeof ChannelsGuideRoute
   DeveloperApiKeysRoute: typeof DeveloperApiKeysRoute
   DeveloperWebhooksRoute: typeof DeveloperWebhooksRoute
   SettingsWorkspaceRoute: typeof SettingsWorkspaceRoute
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/channels_/guide': {
+      id: '/channels_/guide'
+      path: '/channels/guide'
+      fullPath: '/channels/guide'
+      preLoaderRoute: typeof ChannelsGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/developer/api-keys': {
       id: '/developer/api-keys'
       path: '/developer/api-keys'
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeRoute: KnowledgeRoute,
   ProfileRoute: ProfileRoute,
   TeamRoute: TeamRoute,
+  ChannelsGuideRoute: ChannelsGuideRoute,
   DeveloperApiKeysRoute: DeveloperApiKeysRoute,
   DeveloperWebhooksRoute: DeveloperWebhooksRoute,
   SettingsWorkspaceRoute: SettingsWorkspaceRoute,

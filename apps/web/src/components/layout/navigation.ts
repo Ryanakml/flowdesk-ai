@@ -77,7 +77,7 @@ export const navigationGroups: NavGroup[] = [
         title: "WhatsApp Channels",
         href: "/channels",
         icon: MessageCircle,
-        exact: true,
+        exact: false,
         aliases: ["whatsapp", "phone", "meta", "waba"]
       },
       {

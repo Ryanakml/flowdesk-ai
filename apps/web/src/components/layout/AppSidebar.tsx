@@ -9,6 +9,7 @@ import {
 } from "./navigation.js";
 import { OrgSwitcher } from "./OrgSwitcher.js";
 import { UserNav } from "./UserNav.js";
+import { activeNavClassName } from "./nav-styles.js";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@flowdesk/ui";
 
 export function FlowDeskIcon({ size = 20 }: { size?: number }) {
@@ -63,15 +64,16 @@ export function AppSidebar({ collapsed = false, onNavigate, className = "" }: Ap
         onClick={() => onNavigate?.()}
         className={`group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring ${
           active
-            ? "bg-accent/60 text-accent-foreground font-semibold"
+            ? activeNavClassName
             : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
         } ${collapsed ? "justify-center px-0 w-10 h-10" : "w-full"}`}
         data-active={active ? "true" : undefined}
         aria-current={active ? "page" : undefined}
+        aria-label={collapsed ? item.title : undefined}
         data-testid={`nav-link-${item.href}`}
       >
         <Icon
-          className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"}`}
+          className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`}
         />
         {!collapsed && <span className="truncate">{item.title}</span>}
       </Link>
@@ -137,7 +139,7 @@ export function AppSidebar({ collapsed = false, onNavigate, className = "" }: Ap
 
         {/* Sidebar Footer: User Profile & Account Actions */}
         <div className="z-10 flex-none border-t border-border/60 bg-sidebar p-3">
-          <UserNav collapsed={collapsed} />
+          <UserNav collapsed={collapsed} onNavigate={onNavigate} />
         </div>
       </aside>
     </TooltipProvider>

@@ -58,7 +58,7 @@ describe("ChannelsView WhatsApp connection", () => {
     await screen.findByText("Support Line");
     expect(screen.getByText("Connect WhatsApp")).toBeTruthy();
     expect(screen.getByText("Connect with Meta Signup")).toBeTruthy();
-    expect(screen.getByText("Reconnect with token")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "More actions for Support Line" })).toBeTruthy();
     fireEvent.click(screen.getByText("Connect WhatsApp"));
     expect(screen.getByLabelText("Access token")).toBeTruthy();
     expect(screen.queryByText("App Secret")).toBeNull();

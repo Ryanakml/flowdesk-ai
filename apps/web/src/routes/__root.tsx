@@ -82,6 +82,7 @@ function RootComponent() {
     if (pathname.startsWith("/inbox")) title = "FlowDesk — Inbox";
     else if (pathname.startsWith("/analytics")) title = "FlowDesk — Analytics";
     else if (pathname.startsWith("/knowledge")) title = "FlowDesk — AI Knowledge";
+    else if (pathname === "/channels/guide") title = "FlowDesk — WhatsApp Setup Guide";
     else if (pathname.startsWith("/channels")) title = "FlowDesk — WhatsApp Channels";
     else if (pathname.startsWith("/developer")) title = "FlowDesk — Developer APIs";
     else if (pathname.startsWith("/team")) title = "FlowDesk — Team Settings";
