@@ -1,12 +1,7 @@
-import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "../../../components/ui/card.js";
+import { Card } from "../../../components/ui/card.js";
 import { MetricLabel } from "../../../components/MetricLabel.js";
+import { ComplianceGauge, MetricSparkline } from "./metric-sparkline.js";
+import type { VolumeDataPoint } from "./chart-area-interactive.js";
 
 export interface AnalyticsOverviewData {
   totalConversations: number;
@@ -24,98 +19,99 @@ export interface AnalyticsOverviewData {
   avgResolutionTimeSeconds: number;
 }
 
-export function SectionCards({ overview }: { overview: AnalyticsOverviewData }) {
+export function SectionCards({
+  overview,
+  volumeSeries
+}: {
+  overview: AnalyticsOverviewData;
+  volumeSeries: VolumeDataPoint[];
+}) {
+  const cards = [
+    {
+      label: "TOTAL CONVERSATIONS",
+      explanation: "Unique conversations created during the selected period.",
+      value: overview.totalConversations,
+      tone: "success",
+      detail: `${overview.resolvedConversations} resolved (${overview.openConversations} active)`,
+      footnote: `${overview.assignedConversations} currently assigned`,
+      series: "inbound" as const,
+      chartLabel: "Inbound activity"
+    },
+    {
+      label: "BOT AUTOMATION RATE",
+      explanation:
+        "The bot automation percentage reported for the selected period. The supporting chart shows automated message volume.",
+      value: `${overview.botAutomationRate}%`,
+      tone: "primary",
+      detail: `${overview.botMessages} bot responses auto-dispatched`,
+      footnote: "Grounding across verified sources",
+      series: "bot" as const,
+      chartLabel: "Automated activity"
+    },
+    {
+      label: "SLA COMPLIANCE",
+      explanation:
+        "Percentage of conversations meeting the configured response and resolution targets. The gauge shows the current period, not a historical trend.",
+      value: `${overview.slaMetPercentage}%`,
+      tone: "success",
+      detail: `Avg response: ${overview.avgFirstResponseTimeSeconds}s`,
+      footnote: "Strict resolution thresholds",
+      series: null,
+      chartLabel: ""
+    },
+    {
+      label: "AVG RESOLUTION TIME",
+      explanation:
+        "Average time from conversation start until resolution. The supporting chart shows outbound message volume, not resolution-time history.",
+      value: `${Math.round(overview.avgResolutionTimeSeconds / 60)}m`,
+      tone: "primary",
+      detail: `${overview.humanMessages} human agent responses`,
+      footnote: "First contact to resolved",
+      series: "outbound" as const,
+      chartLabel: "Outbound activity"
+    }
+  ];
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-      {/* Total Conversations */}
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>
-            <MetricLabel
-              label="TOTAL CONVERSATIONS"
-              explanation="Unique conversations created during the selected period."
-            />
-          </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {overview.totalConversations}
-          </CardTitle>
-          <CardAction />
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium text-success">
-            {overview.resolvedConversations} resolved ({overview.openConversations} active)
+    <div
+      className="grid min-w-0 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4"
+      data-testid="analytics-metrics"
+    >
+      {cards.map((card, index) => (
+        <Card
+          key={card.label}
+          className="analytics-metric-card min-w-0 gap-4 rounded-xl p-5 shadow-none"
+          data-tone={card.tone}
+          data-testid="analytics-metric"
+        >
+          <div className="text-[10px] font-medium tracking-wide text-muted-foreground">
+            <MetricLabel label={card.label} explanation={card.explanation} />
           </div>
-          <div className="text-muted-foreground text-xs">
-            {overview.assignedConversations} currently assigned
+          <div className="flex min-w-0 items-start justify-between gap-2">
+            <p
+              className={`text-3xl font-semibold tracking-tight tabular-nums ${index === 2 ? "text-success" : "text-card-foreground"}`}
+            >
+              {card.value}
+            </p>
+            {card.series ? (
+              <MetricSparkline
+                series={volumeSeries}
+                dataKey={card.series}
+                label={card.chartLabel}
+              />
+            ) : (
+              <ComplianceGauge value={overview.slaMetPercentage} />
+            )}
           </div>
-        </CardFooter>
-      </Card>
-
-      {/* Bot Automation Rate */}
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>
-            <MetricLabel
-              label="BOT AUTOMATION RATE"
-              explanation="Share of outbound messages handled by the bot during the selected period."
-            />
-          </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-primary">
-            {overview.botAutomationRate}%
-          </CardTitle>
-          <CardAction />
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {overview.botMessages} bot responses auto-dispatched
+          <div className="space-y-1.5">
+            <p
+              className={`text-xs font-medium leading-relaxed ${index === 0 ? "text-success" : "text-card-foreground"}`}
+            >
+              {card.detail}
+            </p>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">{card.footnote}</p>
           </div>
-          <div className="text-muted-foreground text-xs">Grounding across verified sources</div>
-        </CardFooter>
-      </Card>
-
-      {/* SLA Compliance Rate */}
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>
-            <MetricLabel
-              label="SLA COMPLIANCE"
-              explanation="Percentage of conversations meeting the configured response and resolution targets."
-            />
-          </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl text-success">
-            {overview.slaMetPercentage}%
-          </CardTitle>
-          <CardAction />
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            Avg response: {overview.avgFirstResponseTimeSeconds}s
-          </div>
-          <div className="text-muted-foreground text-xs">Strict resolution thresholds</div>
-        </CardFooter>
-      </Card>
-
-      {/* Avg Resolution Speed */}
-      <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>
-            <MetricLabel
-              label="AVG RESOLUTION TIME"
-              explanation="Average time from conversation start until resolution."
-            />
-          </CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {Math.round(overview.avgResolutionTimeSeconds / 60)}m
-          </CardTitle>
-          <CardAction />
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {overview.humanMessages} human agent responses
-          </div>
-          <div className="text-muted-foreground text-xs">First contact to resolved</div>
-        </CardFooter>
-      </Card>
+        </Card>
+      ))}
     </div>
   );
 }

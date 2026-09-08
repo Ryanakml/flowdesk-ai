@@ -23,6 +23,15 @@
 }
 
 @layer utilities {
+  .analytics-metric-card[data-tone="success"] {
+    background: linear-gradient(125deg, var(--surface-success), var(--card) 80%);
+    border-color: var(--border-success);
+  }
+  .analytics-metric-card[data-tone="primary"],
+  .analytics-panel {
+    background: linear-gradient(125deg, var(--surface-primary), var(--card) 65%);
+    border-color: var(--border-primary);
+  }
   .scrollbar-hidden {
     scrollbar-width: none;
     -ms-overflow-style: none;
