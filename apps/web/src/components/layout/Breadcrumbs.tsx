@@ -31,6 +31,11 @@ export function Breadcrumbs() {
       base.push({ label: "AI Knowledge" });
     } else if (pathname === "/channels") {
       base.push({ label: "WhatsApp Channels" });
+    } else if (pathname === "/channels/guide") {
+      base.push({ label: "WhatsApp Channels", href: "/channels" });
+      base.push({ label: "Setup guide" });
+    } else if (pathname === "/profile") {
+      base.push({ label: "Profile" });
     } else if (pathname === "/developer/api-keys") {
       base.push({ label: "Developer", href: "/developer/api-keys" });
       base.push({ label: "API Keys" });

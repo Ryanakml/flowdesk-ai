@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { activeNavClassName } from "./nav-styles.js";
 import {
   Avatar,
   AvatarFallback,
@@ -12,10 +13,12 @@ import { useAuth } from "../../features/auth/context.js";
 
 interface UserNavProps {
   collapsed?: boolean;
+  onNavigate?: (() => void) | undefined;
 }
 
-export function UserNav({ collapsed = false }: UserNavProps) {
+export function UserNav({ collapsed = false, onNavigate }: UserNavProps) {
   const { sessionUser, currentRole, handleLogout } = useAuth();
+  const active = useRouterState({ select: (state) => state.location.pathname === "/profile" });
   if (!sessionUser) return null;
 
   const initials = sessionUser.displayName
@@ -31,16 +34,25 @@ export function UserNav({ collapsed = false }: UserNavProps) {
     <Button
       asChild
       variant="ghost"
-      className={`flex items-center gap-2 text-foreground font-normal hover:bg-muted/60 transition-colors ${
+      className={`flex items-center gap-2 text-foreground font-normal hover:bg-muted/60 transition-colors ${active ? activeNavClassName : ""} ${
         collapsed
           ? "h-10 w-10 p-0 justify-center rounded-lg"
           : "w-full h-10 p-2 justify-start rounded-lg"
       }`}
       data-testid="user-nav-trigger"
     >
-      <Link to="/profile" aria-label="Profile">
+      <Link
+        to="/profile"
+        aria-label="Profile"
+        aria-current={active ? "page" : undefined}
+        onClick={onNavigate}
+      >
         <Avatar className="h-8 w-8 rounded-full border border-border text-xs font-semibold shrink-0">
-          <AvatarFallback className="bg-primary/10 text-foreground">{initials}</AvatarFallback>
+          <AvatarFallback
+            className={`bg-primary/10 ${active ? "text-primary" : "text-foreground"}`}
+          >
+            {initials}
+          </AvatarFallback>
         </Avatar>
         {!collapsed && (
           <span className="truncate text-xs font-medium">{sessionUser.displayName}</span>

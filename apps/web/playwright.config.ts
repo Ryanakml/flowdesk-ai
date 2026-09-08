@@ -18,6 +18,8 @@ export default defineConfig({
       use: { viewport: { width: 1440, height: 900 }, colorScheme: "light" }
     },
     { name: "desktop-dark", use: { viewport: { width: 1440, height: 900 }, colorScheme: "dark" } },
+    { name: "tablet-light", use: { viewport: { width: 820, height: 1180 }, colorScheme: "light" } },
+    { name: "tablet-dark", use: { viewport: { width: 820, height: 1180 }, colorScheme: "dark" } },
     { name: "mobile-light", use: { viewport: { width: 390, height: 640 }, colorScheme: "light" } },
     { name: "mobile-dark", use: { viewport: { width: 390, height: 640 }, colorScheme: "dark" } }
   ],
