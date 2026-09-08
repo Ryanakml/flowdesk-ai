@@ -86,7 +86,7 @@ export function WorkspaceView() {
                 id="workspace-invite-team-btn"
                 className="cursor-pointer inline-flex items-center gap-1.5"
               >
-                <Link to="/team" search={{ invite: true }}>
+                <Link to="/team" search={{ openInvite: true }}>
                   <Users className="size-4" />
                   Invite team members
                 </Link>
