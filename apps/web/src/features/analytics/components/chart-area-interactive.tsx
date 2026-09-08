@@ -51,7 +51,7 @@ export function ChartAreaInteractive({
   onTimeRangeChange
 }: ChartAreaInteractiveProps) {
   return (
-    <Card className="@container/card">
+    <Card className="@container/card h-full min-h-[360px] min-w-0">
       <CardHeader>
         <CardTitle>Message Throughput & Automation Trends</CardTitle>
         <CardDescription>
@@ -76,7 +76,7 @@ export function ChartAreaInteractive({
           </div>
         </CardAction>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="flex min-h-0 flex-1 px-2 pt-4 sm:px-6 sm:pt-6">
         <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full">
           <AreaChart data={volumeSeries} margin={{ top: 24, right: 16, left: 8, bottom: 8 }}>
             <defs>

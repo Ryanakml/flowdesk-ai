@@ -4,7 +4,7 @@ import type {
   ConversationDetailResponse
 } from "@flowdesk/contracts";
 import { Skeleton } from "@flowdesk/ui";
-import { User, Phone, Clock, Tag } from "lucide-react";
+import { User, Clock, Tag } from "lucide-react";
 import { BotConfiguration } from "./BotConfiguration.js";
 
 function formatDate(isoString: string): string {
@@ -83,14 +83,6 @@ export function CustomerContextPanel({
               <p className="text-xs text-muted-foreground truncate">+{conv.customerPhone}</p>
             )}
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Phone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-            <span className="text-xs text-foreground">+{conv.customerPhone}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">WhatsApp</div>
         </div>
       </div>
 

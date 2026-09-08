@@ -52,6 +52,22 @@ describe("MessageBubble Component (UI-04)", () => {
     expect(screen.getByLabelText("Read")).toBeDefined();
   });
 
+  it("renders bot messages through the same Markdown bubble path as agent replies", () => {
+    const botMessage: Message = {
+      ...mockMsgBase,
+      id: "msg-bot-001",
+      direction: "outbound",
+      senderType: "bot",
+      content: "**Shared inbox**\n\n- Reply from approved knowledge"
+    };
+
+    render(<MessageBubble message={botMessage} />);
+
+    expect(screen.getByTestId("msg-bubble-msg-bot-001").classList.contains("outbound")).toBe(true);
+    expect(screen.getByText("Shared inbox").tagName).toBe("STRONG");
+    expect(screen.getByText("Reply from approved knowledge").tagName).toBe("LI");
+  });
+
   it("renders system events as discreet centered pills", () => {
     const systemMsg: Message = {
       ...mockMsgBase,
