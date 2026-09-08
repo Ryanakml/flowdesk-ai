@@ -7,52 +7,56 @@
 ## Tech Stack
 
 ### Frontend
-| Layer | Technology |
-|---|---|
-| Framework | React 19 |
-| Routing | TanStack Router (file-based) |
-| Server state | TanStack Query |
-| Tables | TanStack Table |
-| Build tool | Vite 7 + Tailwind CSS v4 |
-| Real-time | Socket.IO client |
-| Charts | Recharts |
-| Components | shadcn/ui + Radix UI + Lucide React |
-| Testing | Vitest + Testing Library + Playwright |
+
+| Layer        | Technology                            |
+| ------------ | ------------------------------------- |
+| Framework    | React 19                              |
+| Routing      | TanStack Router (file-based)          |
+| Server state | TanStack Query                        |
+| Tables       | TanStack Table                        |
+| Build tool   | Vite 7 + Tailwind CSS v4              |
+| Real-time    | Socket.IO client                      |
+| Charts       | Recharts                              |
+| Components   | shadcn/ui + Radix UI + Lucide React   |
+| Testing      | Vitest + Testing Library + Playwright |
 
 ### Backend
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 22 (ESM) |
-| API framework | Express 5 |
-| Language | TypeScript 5 (strict) |
-| Schema validation | Zod |
-| ORM / DB access | Prisma (raw SQL migrations via `pg`) |
-| Database | PostgreSQL 16 + pgvector |
-| Queue | Redis (outbox polling) |
-| Real-time transport | Socket.IO + Redis adapter |
-| Object storage | S3-compatible (MinIO locally, AWS S3 in prod) |
-| Malware scanning | ClamAV |
-| Auth | OIDC (session-based) |
-| Observability | OpenTelemetry + Prometheus + Grafana + pino |
-| Monorepo | Turborepo + pnpm workspaces |
-| CI quality gate | Prettier · ESLint · tsc · Vitest · OpenAPI check |
+
+| Layer               | Technology                                       |
+| ------------------- | ------------------------------------------------ |
+| Runtime             | Node.js 22 (ESM)                                 |
+| API framework       | Express 5                                        |
+| Language            | TypeScript 5 (strict)                            |
+| Schema validation   | Zod                                              |
+| ORM / DB access     | Prisma (raw SQL migrations via `pg`)             |
+| Database            | PostgreSQL 16 + pgvector                         |
+| Queue               | Redis (outbox polling)                           |
+| Real-time transport | Socket.IO + Redis adapter                        |
+| Object storage      | S3-compatible (MinIO locally, AWS S3 in prod)    |
+| Malware scanning    | ClamAV                                           |
+| Auth                | OIDC (session-based)                             |
+| Observability       | OpenTelemetry + Prometheus + Grafana + pino      |
+| Monorepo            | Turborepo + pnpm workspaces                      |
+| CI quality gate     | Prettier · ESLint · tsc · Vitest · OpenAPI check |
 
 ### AI / LLM
-| Layer | Technology |
-|---|---|
-| Chat providers | Google Gemini · OpenAI (swappable via adapter) |
-| Embedding providers | Gemini Embedding · OpenAI Embedding |
-| Vector search | pgvector (cosine similarity, stored in PostgreSQL) |
-| RAG pipeline | Chunk → Embed → Store → Retrieve → Prompt |
+
+| Layer               | Technology                                         |
+| ------------------- | -------------------------------------------------- |
+| Chat providers      | Google Gemini · OpenAI (swappable via adapter)     |
+| Embedding providers | Gemini Embedding · OpenAI Embedding                |
+| Vector search       | pgvector (cosine similarity, stored in PostgreSQL) |
+| RAG pipeline        | Chunk → Embed → Store → Retrieve → Prompt          |
 
 ### Infrastructure
-| Layer | Technology |
-|---|---|
-| Containerization | Docker + Docker Compose (local) |
-| IaC | Terraform (`infra/terraform`) |
-| Orchestration | Kubernetes (`infra/deploy`) |
-| Email (local) | Mailpit |
-| Tracing | OpenTelemetry Collector → Prometheus → Grafana |
+
+| Layer            | Technology                                     |
+| ---------------- | ---------------------------------------------- |
+| Containerization | Docker + Docker Compose (local)                |
+| IaC              | Terraform (`infra/terraform`)                  |
+| Orchestration    | Kubernetes (`infra/deploy`)                    |
+| Email (local)    | Mailpit                                        |
+| Tracing          | OpenTelemetry Collector → Prometheus → Grafana |
 
 ---
 
@@ -83,6 +87,7 @@ WhatsApp Cloud API
 **Normalization** converts the raw Meta webhook payload into typed `Conversation` and `Message` records, resolving the phone number to the correct WhatsApp channel and tenant.
 
 **Routing** is a pure-function engine in `@flowdesk/domain`. It evaluates, in order:
+
 - Service-window check (business hours per channel)
 - SLA deadlines and escalation thresholds
 - Routing rules (keyword match, contact tag, round-robin, least-loaded)
@@ -243,40 +248,40 @@ This is a **Turborepo monorepo** with two top-level namespaces:
 
 ### Apps
 
-| App | Port | Description |
-|---|---|---|
-| `web` | 3000 | React SPA — inbox, channels, knowledge, analytics, developer settings |
-| `api` | 4000 | Express REST API — auth, conversations, routing, bots, attachments, analytics |
-| `ingress` | 4001 | WhatsApp Cloud API webhook receiver |
-| `worker` | 4002 | Outbox poller — normalization, dispatch, bot-drafts, auto-send, media |
-| `scheduler` | 4003 | Interval runner — analytics aggregation |
+| App         | Port | Description                                                                   |
+| ----------- | ---- | ----------------------------------------------------------------------------- |
+| `web`       | 3000 | React SPA — inbox, channels, knowledge, analytics, developer settings         |
+| `api`       | 4000 | Express REST API — auth, conversations, routing, bots, attachments, analytics |
+| `ingress`   | 4001 | WhatsApp Cloud API webhook receiver                                           |
+| `worker`    | 4002 | Outbox poller — normalization, dispatch, bot-drafts, auto-send, media         |
+| `scheduler` | 4003 | Interval runner — analytics aggregation                                       |
 
 ### Packages
 
-| Package | Description |
-|---|---|
-| `@flowdesk/db` | Prisma client + typed data-access layer (conversations, orgs, channels, knowledge, auth, routing, webhooks) |
-| `@flowdesk/domain` | Pure business logic — routing rules, auto-release gate, auto-send policy, SLA, permissions, production-release gating, RAG |
-| `@flowdesk/providers` | Adapters — WhatsApp Cloud API, Gemini/OpenAI chat+embeddings, S3 storage, OIDC identity, ClamAV |
-| `@flowdesk/contracts` | Zod-validated TypeScript schemas; source of truth for the OpenAPI spec |
-| `@flowdesk/security` | Rate limiting, OIDC sessions, request signing, SSRF protection, field encryption, AI safety guardrails |
-| `@flowdesk/observability` | OTel tracing, Prometheus metrics, pino structured logging, PII redaction |
-| `@flowdesk/config` | Typed env-var configuration for every service |
-| `@flowdesk/ui` | Shared design system (shadcn/ui components, Tailwind CSS tokens) |
-| `@flowdesk/testkit` | Shared test utilities, factories, and mock providers |
+| Package                   | Description                                                                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `@flowdesk/db`            | Prisma client + typed data-access layer (conversations, orgs, channels, knowledge, auth, routing, webhooks)                |
+| `@flowdesk/domain`        | Pure business logic — routing rules, auto-release gate, auto-send policy, SLA, permissions, production-release gating, RAG |
+| `@flowdesk/providers`     | Adapters — WhatsApp Cloud API, Gemini/OpenAI chat+embeddings, S3 storage, OIDC identity, ClamAV                            |
+| `@flowdesk/contracts`     | Zod-validated TypeScript schemas; source of truth for the OpenAPI spec                                                     |
+| `@flowdesk/security`      | Rate limiting, OIDC sessions, request signing, SSRF protection, field encryption, AI safety guardrails                     |
+| `@flowdesk/observability` | OTel tracing, Prometheus metrics, pino structured logging, PII redaction                                                   |
+| `@flowdesk/config`        | Typed env-var configuration for every service                                                                              |
+| `@flowdesk/ui`            | Shared design system (shadcn/ui components, Tailwind CSS tokens)                                                           |
+| `@flowdesk/testkit`       | Shared test utilities, factories, and mock providers                                                                       |
 
 ### Infrastructure (local Docker Compose)
 
-| Service | Port | Purpose |
-|---|---|---|
-| PostgreSQL + pgvector | 5433 | Primary database + vector similarity search |
-| Redis | 6379 | Outbox pub/sub + Socket.IO adapter |
-| MinIO | 9000 / 9001 | S3-compatible object store for attachments |
-| ClamAV | 3310 | Malware scanning |
-| Mailpit | 8025 | Local SMTP + email inspector |
-| OTel Collector | 4317 / 4318 | Trace and metric ingestion |
-| Prometheus | 9090 | Metrics scraping |
-| Grafana | 3001 | Dashboards |
+| Service               | Port        | Purpose                                     |
+| --------------------- | ----------- | ------------------------------------------- |
+| PostgreSQL + pgvector | 5433        | Primary database + vector similarity search |
+| Redis                 | 6379        | Outbox pub/sub + Socket.IO adapter          |
+| MinIO                 | 9000 / 9001 | S3-compatible object store for attachments  |
+| ClamAV                | 3310        | Malware scanning                            |
+| Mailpit               | 8025        | Local SMTP + email inspector                |
+| OTel Collector        | 4317 / 4318 | Trace and metric ingestion                  |
+| Prometheus            | 9090        | Metrics scraping                            |
+| Grafana               | 3001        | Dashboards                                  |
 
 ---
 
@@ -284,15 +289,15 @@ This is a **Turborepo monorepo** with two top-level namespaces:
 
 The frontend is a Vite + React 19 SPA using TanStack Router (file-based routing) and TanStack Query for all server state.
 
-| Screen | What it does |
-|---|---|
-| **Inbox** | Live conversation list, message thread, SSE updates, bot-draft preview, assignment panel, labels |
-| **Channels** | WhatsApp Business Account setup, phone number management, Meta Embedded Signup, template library |
-| **Knowledge** | Document upload, ingestion status, knowledge-base management for AI context |
-| **Analytics** | Conversation volume, SLA adherence, bot deflection rate, team performance — time-series charts |
-| **Team** | Member management, role assignment, invitation flow |
-| **Developer** | API key management, webhook subscriptions, payload inspector |
-| **Settings** | Workspace config, branding, notification preferences |
+| Screen        | What it does                                                                                     |
+| ------------- | ------------------------------------------------------------------------------------------------ |
+| **Inbox**     | Live conversation list, message thread, SSE updates, bot-draft preview, assignment panel, labels |
+| **Channels**  | WhatsApp Business Account setup, phone number management, Meta Embedded Signup, template library |
+| **Knowledge** | Document upload, ingestion status, knowledge-base management for AI context                      |
+| **Analytics** | Conversation volume, SLA adherence, bot deflection rate, team performance — time-series charts   |
+| **Team**      | Member management, role assignment, invitation flow                                              |
+| **Developer** | API key management, webhook subscriptions, payload inspector                                     |
+| **Settings**  | Workspace config, branding, notification preferences                                             |
 
 ---
 
@@ -324,17 +329,17 @@ make dev
 
 ### Service URLs
 
-| Service | URL |
-|---|---|
-| Web | http://localhost:3000 |
-| API | http://localhost:4000 |
-| Ingress | http://localhost:4001 |
-| Worker health | http://localhost:4002 |
+| Service          | URL                   |
+| ---------------- | --------------------- |
+| Web              | http://localhost:3000 |
+| API              | http://localhost:4000 |
+| Ingress          | http://localhost:4001 |
+| Worker health    | http://localhost:4002 |
 | Scheduler health | http://localhost:4003 |
-| Grafana | http://localhost:3001 |
-| Prometheus | http://localhost:9090 |
-| Mailpit | http://localhost:8025 |
-| MinIO Console | http://localhost:9001 |
+| Grafana          | http://localhost:3001 |
+| Prometheus       | http://localhost:9090 |
+| Mailpit          | http://localhost:8025 |
+| MinIO Console    | http://localhost:9001 |
 
 ### Database
 
