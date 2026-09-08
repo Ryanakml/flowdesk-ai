@@ -319,7 +319,7 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
 
       {canManage && (
         <Dialog open={showManualConnect} onOpenChange={setShowManualConnect}>
-          <DialogContent>
+          <DialogContent className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto scrollbar-hidden sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Connect WhatsApp</DialogTitle>
               <DialogDescription>
@@ -327,92 +327,90 @@ export function ChannelsView({ orgId, canManage, showToast }: ChannelsViewProps)
                 access token is never returned by the API.
               </DialogDescription>
             </DialogHeader>
-            {showManualConnect && (
-              <form
-                onSubmit={(event) => void handleManualConnect(event)}
-                className="grid gap-4 md:grid-cols-2"
-                aria-label="Connect WhatsApp with access token"
-              >
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">
-                    Channel name
-                    <input
-                      required
-                      maxLength={100}
-                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      value={manualConnection.name}
-                      onChange={(event) =>
-                        setManualConnection((current) => ({ ...current, name: event.target.value }))
-                      }
-                    />
-                  </label>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">
-                    Phone Number ID
-                    <input
-                      required
-                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      value={manualConnection.phoneNumberId}
-                      onChange={(event) =>
-                        setManualConnection((current) => ({
-                          ...current,
-                          phoneNumberId: event.target.value
-                        }))
-                      }
-                    />
-                  </label>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">
-                    WABA ID
-                    <input
-                      required
-                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      value={manualConnection.wabaId}
-                      onChange={(event) =>
-                        setManualConnection((current) => ({
-                          ...current,
-                          wabaId: event.target.value
-                        }))
-                      }
-                    />
-                  </label>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-foreground">
-                    Access token
-                    <input
-                      required
-                      type="password"
-                      autoComplete="off"
-                      className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      value={manualConnection.accessToken}
-                      onChange={(event) =>
-                        setManualConnection((current) => ({
-                          ...current,
-                          accessToken: event.target.value
-                        }))
-                      }
-                    />
-                  </label>
-                </div>
-                <DialogFooter className="gap-2 pt-2 md:col-span-2">
-                  <Button type="submit" className="cursor-pointer" disabled={connecting}>
-                    {connecting ? "Verifying and connecting..." : "Verify and connect"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="cursor-pointer"
-                    onClick={() => setShowManualConnect(false)}
-                    disabled={connecting}
-                  >
-                    Cancel
-                  </Button>
-                </DialogFooter>
-              </form>
-            )}
+            <form
+              onSubmit={(event) => void handleManualConnect(event)}
+              className="grid gap-4 md:grid-cols-2"
+              aria-label="Connect WhatsApp with access token"
+            >
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  Channel name
+                  <input
+                    required
+                    maxLength={100}
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.name}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({ ...current, name: event.target.value }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  Phone Number ID
+                  <input
+                    required
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.phoneNumberId}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({
+                        ...current,
+                        phoneNumberId: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  WABA ID
+                  <input
+                    required
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.wabaId}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({
+                        ...current,
+                        wabaId: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-foreground">
+                  Access token
+                  <input
+                    required
+                    type="password"
+                    autoComplete="off"
+                    className="mt-1 flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    value={manualConnection.accessToken}
+                    onChange={(event) =>
+                      setManualConnection((current) => ({
+                        ...current,
+                        accessToken: event.target.value
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+              <DialogFooter className="gap-2 pt-2 md:col-span-2">
+                <Button type="submit" className="cursor-pointer" disabled={connecting}>
+                  {connecting ? "Verifying and connecting..." : "Verify and connect"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="cursor-pointer"
+                  onClick={() => setShowManualConnect(false)}
+                  disabled={connecting}
+                >
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </form>
             <div className="border-t border-border pt-3 text-sm text-muted-foreground">
               Prefer a guided setup? Close this dialog and choose{" "}
               <span className="font-medium text-foreground">Connect with Meta Signup</span>.

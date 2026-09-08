@@ -62,6 +62,10 @@ describe("ChannelsView WhatsApp connection", () => {
     fireEvent.click(screen.getByText("Connect WhatsApp"));
     expect(screen.getByLabelText("Access token")).toBeTruthy();
     expect(screen.queryByText("App Secret")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByLabelText("Access token")).toBeNull());
+    fireEvent.click(screen.getByText("Connect WhatsApp"));
+    expect(screen.getByLabelText("Access token")).toBeTruthy();
   });
 
   it("submits manual credentials to the verified connector", async () => {
