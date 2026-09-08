@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "@flowdesk/ui/styles/tokens.css";
 
+/* Shared UI lives outside the web workspace's automatic source scan. */
+@source "../../../packages/ui/src";
+
 @custom-variant dark (&:is(.dark *));
 
 @layer base {

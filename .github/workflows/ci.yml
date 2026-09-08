@@ -44,6 +44,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test:coverage
       - run: pnpm build
+      - name: Install Chromium for production UI regression tests
+        run: pnpm --filter @flowdesk/web exec playwright install --with-deps chromium
+      - name: Verify production dialog visibility and interactions
+        run: pnpm --filter @flowdesk/web test:e2e
       - name: Security audit
         run: |
           for attempt in {1..5}; do
@@ -71,6 +75,7 @@ jobs:
             changed-workspaces.json
             **/coverage
             **/dist
+            apps/web/test-results
           retention-days: 14
 
   images:
