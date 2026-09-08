@@ -582,7 +582,7 @@ describe("Modern Frontend Router & Navigation Architecture", () => {
   it("opens team invite modal when navigating from workspace with invite search param", async () => {
     setupAuthMocks("owner");
     render(<App />);
-    await router.navigate({ to: "/team", search: { invite: true } });
+    await router.navigate({ to: "/team", search: { openInvite: true } });
 
     expect(await screen.findByText("Invite Team Member")).toBeTruthy();
     expect(screen.getByLabelText("Email Address")).toBeTruthy();
