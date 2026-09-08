@@ -9,6 +9,7 @@ import {
 import { SectionCards } from "./features/analytics/components/section-cards.js";
 import { ChartAreaInteractive } from "./features/analytics/components/chart-area-interactive.js";
 import { RecentChats } from "./features/analytics/components/recent-chats.js";
+import { AnalyticsRangeSelect } from "./features/analytics/components/analytics-range-select.js";
 
 export interface AnalyticsViewProps {
   orgId: string;
@@ -119,7 +120,11 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+    <div
+      className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6 lg:p-8"
+      data-testid="analytics-view"
+      aria-busy={loading}
+    >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -132,7 +137,12 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <AnalyticsRangeSelect
+            value={timeRange}
+            onChange={setTimeRange}
+            label="Analytics date range"
+          />
           <Button
             variant="default"
             size="sm"
@@ -148,10 +158,9 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
         </div>
       </div>
 
-      {/* KPI Cards transplanted from donor section cards */}
-      <SectionCards overview={overview} />
+      <SectionCards overview={overview} volumeSeries={tableSeries} />
 
-      <div className="grid min-w-0 items-stretch gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(17rem,1fr)]">
+      <div className="grid min-w-0 items-stretch gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(19rem,1fr)]">
         <ChartAreaInteractive
           volumeSeries={tableSeries}
           timeRange={timeRange}
@@ -161,7 +170,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
       </div>
 
       {/* Daily Volume & Breakdown Table */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
+      <div className="analytics-panel rounded-xl border p-4 sm:p-5">
         <h3 className="mb-4 text-base font-semibold text-foreground">
           Daily Message Volume & Automation Breakdown
         </h3>
@@ -189,7 +198,7 @@ export function AnalyticsView({ orgId }: AnalyticsViewProps) {
                   return (
                     <tr key={pt.date} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground">{pt.date}</td>
-                      <td className="px-4 py-3 text-center font-mono text-primary">{pt.inbound}</td>
+                      <td className="px-4 py-3 text-center font-mono text-chart-1">{pt.inbound}</td>
                       <td className="px-4 py-3 text-center font-mono text-success">
                         {pt.outbound}
                       </td>
