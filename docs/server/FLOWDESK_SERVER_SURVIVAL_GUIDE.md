@@ -635,6 +635,27 @@ Log Redis:
 docker logs --tail 100 --timestamps flowdesk-staging-redis-1
 ```
 
+### Fungsi Redis di FlowDesk
+
+1. **Socket.IO Realtime Adapter (`api`):** Pub/sub fan-out multi-node untuk sinkronisasi state live inbox antarnode.
+2. **Query Embedding Cache (`worker`):** Cache vektor embedding scoped per-tenant untuk worker bot draft AI (`QUERY_EMBEDDING_CACHE_ENABLED=true`).
+
+Command inspeksi query embedding cache (aman dijalankan):
+
+```text
+SCAN 0 MATCH fd:*:query-embedding:* COUNT 50
+ZCARD fd:staging:query-embedding:v1:entries
+PTTL fd:staging:query-embedding:v1:<org_hash>:<identity_hash>:<input_hash>
+```
+
+Format key query embedding cache:
+
+- Entry data vektor: `fd:{env}:query-embedding:v1:{orgHash}:{identity}:{inputHash}` (TTL ~24h dengan jitter ±10%)
+- Lock concurrency: `fd:{env}:query-embedding:v1:{orgHash}:{identity}:{inputHash}:lock` (lease ~17s)
+- Admission sorted set: `fd:{env}:query-embedding:v1:entries` (skor = timestamp expired)
+
+Jika Redis down atau lambat, worker otomatis melakukan **silent bypass** ke provider AI embedding langsung tanpa menggagalkan draft balasan. Runbook lengkap: `docs/runbooks/query-embedding-cache.md`.
+
 ---
 
 ## 9. Health checks

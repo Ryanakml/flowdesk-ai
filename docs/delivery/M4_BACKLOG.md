@@ -59,12 +59,12 @@
 
 - **Outcome:** search engine returns top-K relevance-ranked knowledge chunks strictly within tenant boundaries and builds safe context windows.
 - **Depends on:** M4-03.
-- **Scope:** vector similarity search query using cosine distance `<=>`; minimum similarity threshold filtering; citation metadata extraction; bounded conversation context builder (message history + knowledge chunks formatted for LLM).
-- **Acceptance:** queries never leak cross-tenant knowledge chunks; low-confidence queries below threshold return 0 chunks triggering fallback; context builder respects token budgets.
-- **Design:** PostgreSQL pgvector cosine similarity search executed inside `TenantContext` transaction; deterministic citation generator.
-- **Cross-cutting:** domain/db/tests/security `update`.
-- **Delivery:** retrieval service and context assembly utilities.
-- **Evidence:** semantic search accuracy fixtures, cross-tenant isolation negative suite, token truncation tests.
+- **Scope:** query embedding generation with optional tenant-scoped Redis cache (`QUERY_EMBEDDING_CACHE_ENABLED`, SHA-256 isolated keys, atomic Lua admission, silent fail-open provider fallback); vector similarity search query using cosine distance `<=>`; minimum similarity threshold filtering; citation metadata extraction; bounded conversation context builder (message history + knowledge chunks formatted for LLM).
+- **Acceptance:** queries never leak cross-tenant knowledge chunks; low-confidence queries below threshold return 0 chunks triggering fallback; context builder respects token budgets; Redis cache failures seamlessly fall back to provider without job failure.
+- **Design:** PostgreSQL pgvector cosine similarity search executed inside `TenantContext` transaction; deterministic citation generator; optional disposable Redis embedding cache in `apps/worker`.
+- **Cross-cutting:** domain/db/worker/config/tests/security `update`.
+- **Delivery:** retrieval service, context assembly utilities, and `query-embedding-cache` in worker.
+- **Evidence:** semantic search accuracy fixtures, cross-tenant isolation negative suite, token truncation tests, cache unit/integration tests.
 - **Owners:** engineering `@Ryanakml`.
 
 ### M4-05 — Implement bot configuration and AI reply draft generation API

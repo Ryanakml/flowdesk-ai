@@ -440,10 +440,11 @@ An admin can publish approved tenant knowledge and agents can receive safe, evid
    - Define immutable published version semantics. A bot run snapshots exact bot/knowledge/model/prompt version.
 2. **Safe ingestion pipeline**
    - Text/file/approved-URL source intake; reuse hardened attachment pipeline; URL fetcher denies private IPs/metadata targets, controls DNS rebinding/redirects, permits protocols/content types, and enforces size/time limits.
-   - Virus scan, parse/normalize/extract, chunk with content hash/metadata, embed through provider adapter/cache, index, report progress and safe error reason. Retry is idempotent per source/version.
+   - Virus scan, parse/normalize/extract, chunk with content hash/metadata, embed through provider adapter (with optional tenant-scoped Redis query embedding cache for bot drafts), index, report progress and safe error reason. Retry is idempotent per source/version.
 3. **Retrieval and bot configuration**
    - Add bot draft/published versions, language/tone/instructions, source allow-list, retrieval top-K/threshold, allowed hours, fallback/escalation rules, `OFF`/`DRAFT` mode, and organization emergency disable.
-   - Retrieve only organization/version-scoped approved chunks. Build bounded conversation context and structured provider output with citations. Enforce source quality threshold; insufficient evidence must create escalation/no answer.
+   - Retrieve only organization/version-scoped approved chunks. Build bounded conversation context and structured provider output with citations. Enforce source quality threshold; insufficient evidence must create escalation/no answer. When enabled, query embeddings are cached in Redis with SHA-256 tenant isolation and fail-open provider fallback.
+
 4. **Draft experience and audit**
    - In the conversation timeline/composer show AI draft, source citations/internal confidence/reason, token/cost estimate where permitted, approve/edit/send/reject controls, and feedback taxonomy.
    - Persist `bot_runs`, retrieval evidence, policy result, output hash, latency/tokens/cost model metadata. Human approval creates the standard outbound intent path from M2/M3.

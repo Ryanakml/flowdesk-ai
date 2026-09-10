@@ -438,10 +438,11 @@ Admin bisa publish knowledge tenant yang udah disetujui, dan agent bisa dapet dr
    - Definisikan semantik version yang published itu immutable. Tiap bot run nyimpen snapshot version bot/knowledge/model/prompt yang persis.
 2. **Pipeline ingestion yang aman**
    - Intake source teks/file/URL yang disetujui; pake ulang pipeline attachment yang udah hardened; URL fetcher nolak private IP/target metadata, kontrol DNS rebinding/redirect, izinin protocol/content type tertentu, dan terapkan batas size/time.
-   - Scan virus, parse/normalize/extract, chunk dengan content hash/metadata, embed lewat adapter/cache provider, index, laporin progress dan alasan error yang aman. Retry itu idempotent per source/version.
+   - Scan virus, parse/normalize/extract, chunk dengan content hash/metadata, embed lewat adapter provider (dengan opsi query embedding cache scoped per-tenant di Redis untuk bot drafts), index, laporin progress dan alasan error yang aman. Retry itu idempotent per source/version.
 3. **Retrieval dan konfigurasi bot**
    - Tambahin version draft/published bot, bahasa/tone/instruksi, allow-list source, top-K/threshold retrieval, jam yang diizinin, aturan fallback/escalation, mode `OFF`/`DRAFT`, dan emergency disable per organization.
-   - Cuma retrieve chunk yang disetujui dan scoped ke organization/version. Bangun context percakapan yang bounded dan output provider terstruktur lengkap sama citation. Terapkan threshold kualitas source; bukti yang kurang cukup harus bikin escalation/gak jawab.
+   - Cuma retrieve chunk yang disetujui dan scoped ke organization/version. Bangun context percakapan yang bounded dan output provider terstruktur lengkap sama citation. Terapkan threshold kualitas source; bukti yang kurang cukup harus bikin escalation/gak jawab. Jika aktif, query embedding di-cache di Redis dengan isolasi SHA-256 dan fail-open fallback ke provider.
+
 4. **Pengalaman draft dan audit**
    - Di timeline/composer percakapan, tampilin draft AI, citation source/confidence internal/alasan, estimasi token/cost (kalau diizinin), kontrol approve/edit/send/reject, dan taksonomi feedback.
    - Simpan `bot_runs`, bukti retrieval, hasil policy, hash output, metadata latency/token/cost model. Approval manusia bikin path outbound intent standar dari M2/M3.

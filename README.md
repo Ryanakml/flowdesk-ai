@@ -284,6 +284,30 @@ This is a **Turborepo monorepo** with two top-level namespaces:
 | Prometheus            | 9090        | Metrics scraping                                  |
 | Grafana               | 3001        | Dashboards                                        |
 
+### Redis Roles & Query Embedding Cache
+
+Redis 7.x serves two distinct, decoupled purposes in FlowDesk:
+
+1. **Real-time Pub/Sub (`api` service):**
+   - Socket.IO cluster broadcast adapter (`@socket.io/redis-adapter`) for distributing live inbox projection invalidation hints across API nodes.
+2. **Tenant-Scoped Query Embedding Cache (`worker` service):**
+   - Caches query embeddings generated during AI bot draft runs to reduce redundant embedding API calls and lower LLM provider latency and costs.
+   - **Tenant Isolation:** Keys are strictly tenant-isolated and hashed with SHA-256 (`fd:{env}:query-embedding:v1:{orgHash}:{identity}:{inputHash}`); raw tenant IDs and customer queries are never stored in plain text.
+   - **Atomic Admission Control:** Managed by an atomic Lua script (`FILL`) with a sorted-set index tracking entry expiration against `QUERY_EMBEDDING_CACHE_MAX_ENTRIES`.
+   - **Resilience & Fail-Open:** If Redis disconnects, errors, or times out (`QUERY_EMBEDDING_CACHE_TIMEOUT_MS`), the worker automatically bypasses the cache and calls the AI embedding provider directly. A 5-second cooldown circuit prevents connection storms.
+   - **Opt-in & Configuration:**
+
+| Variable                            | Type    | Default | Description                                                                      |
+| ----------------------------------- | ------- | ------- | -------------------------------------------------------------------------------- |
+| `QUERY_EMBEDDING_CACHE_ENABLED`     | boolean | `false` | Enable query embedding cache in worker                                           |
+| `REDIS_URL`                         | string  | —       | Redis connection URL (`redis://` or `rediss://`, required when cache is enabled) |
+| `QUERY_EMBEDDING_CACHE_NAMESPACE`   | string  | `v1`    | Cache partition namespace (bumping invalidates active cache)                     |
+| `QUERY_EMBEDDING_CACHE_TTL_SECONDS` | number  | `86400` | Base TTL in seconds (automatically jittered ±10% to prevent stampedes)           |
+| `QUERY_EMBEDDING_CACHE_TIMEOUT_MS`  | number  | `100`   | Redis command timeout deadline before graceful fallback                          |
+| `QUERY_EMBEDDING_CACHE_MAX_ENTRIES` | number  | `1000`  | Maximum admitted cached vector entries per environment                           |
+
+For operational runbooks and design details, see [Query Embedding Cache Runbook](docs/runbooks/query-embedding-cache.md) and [Redis Architecture Plan](docs/architecture/redis-upgrade-plan-id.md).
+
 ---
 
 ## Web Application
