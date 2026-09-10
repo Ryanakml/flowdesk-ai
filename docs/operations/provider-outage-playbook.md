@@ -61,14 +61,39 @@ This playbook outlines recovery procedures, safe-mode transitions, and mitigatio
 
 ---
 
-## 4. Redis Adapter Failure
+## 4. Redis Failures
 
-### Scenario: Redis Service Crashes or Disconnects
+Redis serves two independent roles in FlowDesk:
 
-- **Symptom:** `realtime.redis_adapter_failed` logged in API.
+1. **Socket.IO pub/sub adapter** — multi-node realtime broadcast fan-out (`api` service).
+2. **Query embedding cache** — optional tenant-scoped vector cache in the `worker` service.
+
+Both roles are strictly ephemeral. All durable state lives in PostgreSQL.
+
+### Scenario A: Socket.IO Redis Adapter Disconnects
+
+- **Symptom:** `realtime.redis_adapter_failed` logged in the `api` service.
 - **Safe Mode Behavior:**
   - Socket.IO server automatically falls back to single-node in-memory adapter (`redisRequired: false`).
   - Realtime room broadcasts continue locally on each API node.
-  - Web UI clients reconnecting after connection drops automatically trigger REST reconciliation to catch up on any missed timeline events.
+  - Web UI clients reconnecting after a connection drop automatically trigger REST reconciliation to catch up on any missed timeline events.
 - **Zero Data Loss Guarantee:**
   - All durable state (messages, events, drafts, routing logs) is persisted in PostgreSQL. Redis is strictly an ephemeral pub/sub layer.
+- **Recovery:** Once Redis is healthy, restart API containers; the adapter reconnects automatically on next startup.
+
+### Scenario B: Query Embedding Cache Degradation
+
+- **Symptom:** `query_embedding_cache_total{outcome="error"}` counter rises; worker logs show `Embedding cache unavailable` or `Embedding cache deadline exceeded`.
+- **Safe Mode Behavior:**
+  - The embedding cache uses a **silent bypass** strategy: any Redis timeout or connection error causes the worker to call the AI embedding provider directly.
+  - Bot draft generation continues without interruption. Latency may increase slightly as the provider is hit on every request.
+  - A 5-second circuit-cooldown prevents connection storms after a Redis failure.
+  - The admission-cap index (`fd:{env}:query-embedding:v1:entries`) is managed atomically; expired entries do not consume capacity.
+- **Operator Action:**
+  1. Check `query_embedding_cache_total{outcome="error"}` in Prometheus.
+  2. Check `query_embedding_cache_total{outcome="bypass"}` — a sustained high bypass rate indicates cache is degraded.
+  3. Confirm Redis connectivity: `docker compose exec redis redis-cli ping` (staging) or equivalent.
+  4. No manual intervention is required for bot drafts; they degrade gracefully to direct provider calls.
+- **Recovery:** Once Redis is healthy, the worker's next successful command resets the circuit cooldown (5 s) and cache hits resume automatically.
+- **Disable the cache entirely:** set `QUERY_EMBEDDING_CACHE_ENABLED=false` in the worker environment and redeploy. The feature is opt-in and off by default.
+- **Full runbook:** [docs/runbooks/query-embedding-cache.md](../runbooks/query-embedding-cache.md)

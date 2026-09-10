@@ -554,7 +554,7 @@ Stack dipilih berdasarkan:
 | ORM | Prisma | latest stable | typed query, migration terkelola |
 | Database | PostgreSQL | 16+ | transactional source of truth |
 | Vector search | `pgvector` | extension | RAG tanpa stack terpisah di fase awal |
-| Cache / queue broker | Redis | 7.4+ | BullMQ, rate limit, pub/sub |
+| Cache / realtime broker | Redis | 7.4+ | Socket.IO pub/sub adapter, tenant-scoped query embedding cache |
 | Job queue | BullMQ | latest stable | robust untuk async jobs |
 | Realtime | Socket.IO + Redis adapter | latest stable | live inbox dan event sync |
 | Object storage | S3 compatible | AWS S3 prod, MinIO local | media, docs, archive |
@@ -2011,7 +2011,9 @@ Object storage:
 Redis:
 
 - bukan source of truth,
-- persistence hanya untuk operational recovery, bukan durability claim utama.
+- persistence hanya untuk operational recovery, bukan durability claim utama,
+- query embedding cache bersifat disposable dan fail-open (silent bypass ke provider AI jika cache error/timeout).
+
 
 ### 25.2 Restore drill
 

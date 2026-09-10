@@ -22,22 +22,23 @@
 
 ### Backend
 
-| Layer               | Technology                                       |
-| ------------------- | ------------------------------------------------ |
-| Runtime             | Node.js 22 (ESM)                                 |
-| API framework       | Express 5                                        |
-| Language            | TypeScript 5 (strict)                            |
-| Schema validation   | Zod                                              |
-| ORM / DB access     | Prisma (raw SQL migrations via `pg`)             |
-| Database            | PostgreSQL 16 + pgvector                         |
-| Queue               | Redis (outbox polling)                           |
-| Real-time transport | Socket.IO + Redis adapter                        |
-| Object storage      | S3-compatible (MinIO locally, AWS S3 in prod)    |
-| Malware scanning    | ClamAV                                           |
-| Auth                | OIDC (session-based)                             |
-| Observability       | OpenTelemetry + Prometheus + Grafana + pino      |
-| Monorepo            | Turborepo + pnpm workspaces                      |
-| CI quality gate     | Prettier · ESLint · tsc · Vitest · OpenAPI check |
+| Layer                 | Technology                                          |
+| --------------------- | --------------------------------------------------- |
+| Runtime               | Node.js 22 (ESM)                                    |
+| API framework         | Express 5                                           |
+| Language              | TypeScript 5 (strict)                               |
+| Schema validation     | Zod                                                 |
+| ORM / DB access       | Prisma (raw SQL migrations via `pg`)                |
+| Database              | PostgreSQL 16 + pgvector                            |
+| Queue                 | PostgreSQL transactional outbox polling             |
+| Real-time transport   | Socket.IO + Redis adapter                           |
+| Query embedding cache | Optional tenant-scoped Redis cache in the AI worker |
+| Object storage        | S3-compatible (MinIO locally, AWS S3 in prod)       |
+| Malware scanning      | ClamAV                                              |
+| Auth                  | OIDC (session-based)                                |
+| Observability         | OpenTelemetry + Prometheus + Grafana + pino         |
+| Monorepo              | Turborepo + pnpm workspaces                         |
+| CI quality gate       | Prettier · ESLint · tsc · Vitest · OpenAPI check    |
 
 ### AI / LLM
 
@@ -272,16 +273,40 @@ This is a **Turborepo monorepo** with two top-level namespaces:
 
 ### Infrastructure (local Docker Compose)
 
-| Service               | Port        | Purpose                                     |
-| --------------------- | ----------- | ------------------------------------------- |
-| PostgreSQL + pgvector | 5433        | Primary database + vector similarity search |
-| Redis                 | 6379        | Outbox pub/sub + Socket.IO adapter          |
-| MinIO                 | 9000 / 9001 | S3-compatible object store for attachments  |
-| ClamAV                | 3310        | Malware scanning                            |
-| Mailpit               | 8025        | Local SMTP + email inspector                |
-| OTel Collector        | 4317 / 4318 | Trace and metric ingestion                  |
-| Prometheus            | 9090        | Metrics scraping                            |
-| Grafana               | 3001        | Dashboards                                  |
+| Service               | Port        | Purpose                                           |
+| --------------------- | ----------- | ------------------------------------------------- |
+| PostgreSQL + pgvector | 5433        | Primary database + vector similarity search       |
+| Redis                 | 6379        | Socket.IO adapter; optional query embedding cache |
+| MinIO                 | 9000 / 9001 | S3-compatible object store for attachments        |
+| ClamAV                | 3310        | Malware scanning                                  |
+| Mailpit               | 8025        | Local SMTP + email inspector                      |
+| OTel Collector        | 4317 / 4318 | Trace and metric ingestion                        |
+| Prometheus            | 9090        | Metrics scraping                                  |
+| Grafana               | 3001        | Dashboards                                        |
+
+### Redis Roles & Query Embedding Cache
+
+Redis 7.x serves two distinct, decoupled purposes in FlowDesk:
+
+1. **Real-time Pub/Sub (`api` service):**
+   - Socket.IO cluster broadcast adapter (`@socket.io/redis-adapter`) for distributing live inbox projection invalidation hints across API nodes.
+2. **Tenant-Scoped Query Embedding Cache (`worker` service):**
+   - Caches query embeddings generated during AI bot draft runs to reduce redundant embedding API calls and lower LLM provider latency and costs.
+   - **Tenant Isolation:** Keys are strictly tenant-isolated and hashed with SHA-256 (`fd:{env}:query-embedding:v1:{orgHash}:{identity}:{inputHash}`); raw tenant IDs and customer queries are never stored in plain text.
+   - **Atomic Admission Control:** Managed by an atomic Lua script (`FILL`) with a sorted-set index tracking entry expiration against `QUERY_EMBEDDING_CACHE_MAX_ENTRIES`.
+   - **Resilience & Fail-Open:** If Redis disconnects, errors, or times out (`QUERY_EMBEDDING_CACHE_TIMEOUT_MS`), the worker automatically bypasses the cache and calls the AI embedding provider directly. A 5-second cooldown circuit prevents connection storms.
+   - **Opt-in & Configuration:**
+
+| Variable                            | Type    | Default | Description                                                                      |
+| ----------------------------------- | ------- | ------- | -------------------------------------------------------------------------------- |
+| `QUERY_EMBEDDING_CACHE_ENABLED`     | boolean | `false` | Enable query embedding cache in worker                                           |
+| `REDIS_URL`                         | string  | —       | Redis connection URL (`redis://` or `rediss://`, required when cache is enabled) |
+| `QUERY_EMBEDDING_CACHE_NAMESPACE`   | string  | `v1`    | Cache partition namespace (bumping invalidates active cache)                     |
+| `QUERY_EMBEDDING_CACHE_TTL_SECONDS` | number  | `86400` | Base TTL in seconds (automatically jittered ±10% to prevent stampedes)           |
+| `QUERY_EMBEDDING_CACHE_TIMEOUT_MS`  | number  | `100`   | Redis command timeout deadline before graceful fallback                          |
+| `QUERY_EMBEDDING_CACHE_MAX_ENTRIES` | number  | `1000`  | Maximum admitted cached vector entries per environment                           |
+
+For operational runbooks and design details, see [Query Embedding Cache Runbook](docs/runbooks/query-embedding-cache.md) and [Redis Architecture Plan](docs/architecture/redis-upgrade-plan-id.md).
 
 ---
 
@@ -387,3 +412,5 @@ docker build -f infra/docker/Dockerfile.node --build-arg APP=api -t flowdesk/api
 ## Lines of Code
 
 **~79,000 lines** across all TypeScript and CSS source files (excluding lock files, generated files, build artifacts, and test snapshots).
+
+Query embedding cache configuration, invalidation, failure behavior, and verification: [runbook](docs/runbooks/query-embedding-cache.md). Disabled by default.

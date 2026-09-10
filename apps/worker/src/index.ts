@@ -1,5 +1,6 @@
 import {
   loadAiRuntimeConfig,
+  loadQueryEmbeddingCacheConfig,
   loadChannelEncryptionConfig,
   loadHttpConfig,
   loadMediaConfig,
@@ -28,12 +29,17 @@ import { processAttachmentRetentionBatch } from "./media-retention.js";
 import { processKnowledgeIngestionBatch } from "./knowledge-ingestion.js";
 import { processBotDraftBatch } from "./bot-drafts.js";
 
+import { createQueryEmbeddingCache } from "./query-embedding-cache.js";
+import { createRedisEmbeddingStore } from "./redis-embedding-store.js";
+
 export { processOutboxOutboundBatch, dispatchOutboundMessage };
 
 const config = loadHttpConfig("worker", Number(process.env["WORKER_HEALTH_PORT"] ?? 4002));
 const channelEncryptionConfig = loadChannelEncryptionConfig();
 const whatsAppGraphApiConfig = loadWhatsAppGraphApiConfig();
-const aiRuntime = createAiProviderRuntime(loadAiRuntimeConfig());
+const aiConfig = loadAiRuntimeConfig();
+const aiRuntime = createAiProviderRuntime(aiConfig);
+const cacheConfig = loadQueryEmbeddingCacheConfig();
 const logger = createLogger({
   service: config.SERVICE_NAME,
   environment: config.APP_ENV,
@@ -44,6 +50,36 @@ const stopTelemetry = initializeTelemetry({
   service: config.SERVICE_NAME,
   ...(config.OTEL_EXPORTER_OTLP_ENDPOINT ? { endpoint: config.OTEL_EXPORTER_OTLP_ENDPOINT } : {})
 });
+
+const embeddingStore =
+  cacheConfig.QUERY_EMBEDDING_CACHE_ENABLED && aiRuntime
+    ? createRedisEmbeddingStore({
+        url: cacheConfig.REDIS_URL!,
+        environment: config.APP_ENV,
+        timeoutMs: cacheConfig.QUERY_EMBEDDING_CACHE_TIMEOUT_MS,
+        maxEntries: cacheConfig.QUERY_EMBEDDING_CACHE_MAX_ENTRIES
+      })
+    : undefined;
+const queryEmbeddingCache =
+  embeddingStore && aiRuntime
+    ? createQueryEmbeddingCache({
+        store: embeddingStore,
+        provider: aiRuntime.embeddingProvider,
+        environment: config.APP_ENV,
+        providerIdentity: JSON.stringify([
+          aiRuntime.providerType,
+          aiRuntime.providerType === "gemini"
+            ? aiConfig.GEMINI_BASE_URL
+            : aiRuntime.providerType === "openai"
+              ? aiConfig.OPENAI_BASE_URL
+              : "fake"
+        ]),
+        model: aiRuntime.embeddingModel,
+        namespace: cacheConfig.QUERY_EMBEDDING_CACHE_NAMESPACE,
+        ttlMs: cacheConfig.QUERY_EMBEDDING_CACHE_TTL_SECONDS * 1000,
+        providerTimeoutMs: aiConfig.AI_EMBEDDING_TIMEOUT_MS
+      })
+    : undefined;
 
 const databaseUrl = process.env["DATABASE_URL"];
 const dbPool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : undefined;
@@ -127,6 +163,7 @@ if (dbPool) {
                 chatProvider: aiRuntime.chatProvider,
                 embeddingProvider: aiRuntime.embeddingProvider,
                 chatModel: aiRuntime.chatModel,
+                ...(queryEmbeddingCache ? { queryEmbeddingCache } : {}),
                 logger: {
                   error: (context, msg) => logger.error(context, msg),
                   info: (context, msg) => logger.info(context, msg),
@@ -230,7 +267,8 @@ server.listen(config.PORT, "0.0.0.0", () =>
       host: "0.0.0.0",
       claimsJobs: Boolean(dbPool),
       aiProvider: aiRuntime?.providerType ?? "disabled",
-      aiEmbeddingModel: aiRuntime?.embeddingModel ?? null
+      aiEmbeddingModel: aiRuntime?.embeddingModel ?? null,
+      queryEmbeddingCacheEnabled: Boolean(queryEmbeddingCache)
     },
     "worker.started"
   )
@@ -239,6 +277,7 @@ server.listen(config.PORT, "0.0.0.0", () =>
 function shutdown(signal: string) {
   logger.info({ signal }, "worker.stopping");
   if (pollingTimer) clearInterval(pollingTimer);
+  embeddingStore?.close();
   server.close(() => {
     void Promise.all([
       dbPool?.end().catch((err: unknown) => logger.error({ err }, "worker.db_close_error")),

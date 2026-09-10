@@ -24,7 +24,8 @@
     "@flowdesk/observability": "workspace:*",
     "@flowdesk/providers": "workspace:*",
     "@flowdesk/security": "workspace:*",
-    "pg": "8.16.3"
+    "pg": "8.16.3",
+    "redis": "^5.12.1"
   },
   "devDependencies": {
     "@types/pg": "8.15.5",

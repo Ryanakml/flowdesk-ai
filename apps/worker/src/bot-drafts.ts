@@ -30,8 +30,10 @@ import {
 } from "@flowdesk/security";
 import { recordAiDraftRun } from "@flowdesk/observability";
 import { processCompletedAutoRun } from "./auto-send.js";
+import type { QueryEmbeddingCache } from "./query-embedding-cache.js";
 
 export interface BotDraftWorkerOptions {
+  queryEmbeddingCache?: QueryEmbeddingCache;
   chatProvider: AiChatProvider;
   embeddingProvider: AiEmbeddingProvider;
   chatModel: string;
@@ -171,10 +173,13 @@ export async function processBotDraftBatch(
           currentStage = "query_embedding";
           const redactedQuery = redactPiiFromPrompt(injection.sanitized);
           const piiTypesRedacted = new Set(redactedQuery.piiFound);
-          const embeddingResult = await options.embeddingProvider.generateEmbeddings([
-            redactedQuery.redacted
-          ]);
-          const queryEmbedding = embeddingResult[0]?.embedding;
+          const queryEmbedding = options.queryEmbeddingCache
+            ? await options.queryEmbeddingCache.generate(
+                claimed.organizationId,
+                redactedQuery.redacted
+              )
+            : (await options.embeddingProvider.generateEmbeddings([redactedQuery.redacted]))[0]
+                ?.embedding;
           if (!queryEmbedding) {
             throw new AiProviderError("AI_PROVIDER_INVALID_RESPONSE", { retryable: true });
           }

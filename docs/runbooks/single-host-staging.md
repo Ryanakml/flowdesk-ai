@@ -67,6 +67,16 @@ and citations, then confirm that no outbound message is sent by draft generation
 persists the actual runtime chat model on the completed bot run and records the provider identifier
 in its audit metadata.
 
+### Query embedding cache
+
+To enable the optional Redis query embedding cache in staging, add to `/opt/flowdesk/shared/staging.env`:
+`QUERY_EMBEDDING_CACHE_ENABLED=true` alongside `REDIS_URL=redis://redis:6379`. The worker container connects
+to the internal Redis service over Docker's internal network. When enabled, query embeddings are cached
+per-tenant for 24 hours (`QUERY_EMBEDDING_CACHE_TTL_SECONDS=86400`). Verify cache outcomes via worker metrics:
+`curl -s http://localhost:4002/metrics | grep query_embedding_cache`. If Redis is temporarily unreachable,
+the worker logs `Embedding cache unavailable` and silently bypasses to the active AI embedding provider.
+See [docs/runbooks/query-embedding-cache.md](query-embedding-cache.md) for runbook details.
+
 ## Automated release
 
 Pull requests execute all quality/database/Terraform gates and cached image builds but never contact staging. A push to `main` after every required job succeeds performs the release:

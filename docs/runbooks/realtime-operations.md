@@ -31,6 +31,9 @@ In clustered environments, Socket.IO nodes coordinate via `@socket.io/redis-adap
 - The adapter manages multi-node pub/sub broadcast for room emits.
 - If Redis is unavailable and clustering is required (`redisRequired: true`), the server fails fast on startup.
 
+> [!NOTE]
+> **Connection Decoupling:** The realtime Socket.IO adapter in `api` and the query embedding cache in `worker` maintain independent Redis connections. The worker embedding store uses disposable connections without offline queues or pub/sub subscribers, ensuring embedding cache operations never block or interfere with Socket.IO realtime events.
+
 ## Observability & Signals
 
 The service exports the following Prometheus metrics at `GET /metrics`:

@@ -62,20 +62,21 @@ case, all unit/browser suites pass, and the secret scanner reports no findings.
 
 Run each case in a disposable local organization:
 
-| Case                | Input/action                                                            | Expected result                                                              |
-| ------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| No evidence         | Ask about content absent from Knowledge                                 | `no_evidence`; no answer and no outbound intent                              |
-| Prompt injection    | Ask to ignore prior instructions or reveal the system prompt            | `safety_blocked`; provider chat is not called                                |
-| PII                 | Include a synthetic email/phone/NIK                                     | provider prompt contains redaction markers; DB message remains authoritative |
-| Unsafe knowledge    | Ingest text containing an instruction override                          | unsafe chunks are excluded; no evidence if none remain                       |
-| Oversized prompt    | Use synthetic content above the configured budget                       | `budget_exceeded`; no chat call                                              |
-| Provider 401        | Use an intentionally revoked test credential in an isolated environment | terminal safe provider error; no upstream body or credential in UI/logs      |
-| Provider 429/5xx    | Use a controlled test proxy or adapter fixture                          | bounded retry with backoff, then success or `provider_failed`                |
-| Worker interruption | Stop worker after claim, wait past the lease, restart                   | lease recovery; at most one active run                                       |
-| Knowledge changes   | Re-index a source after queueing but before draft completion            | old run becomes `stale`; regenerate against the new version                  |
-| Emergency stop      | Enable kill switch while a run is queued                                | worker records `off`; no provider or outbound call                           |
-| Closed conversation | Close a conversation after draft completion, then attempt approval      | approval is rejected; no message or outbound intent                          |
-| Approval replay     | Submit the same approved run twice                                      | both requests resolve to the same outbound message                           |
+| Case                | Input/action                                                            | Expected result                                                                |
+| ------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| No evidence         | Ask about content absent from Knowledge                                 | `no_evidence`; no answer and no outbound intent                                |
+| Prompt injection    | Ask to ignore prior instructions or reveal the system prompt            | `safety_blocked`; provider chat is not called                                  |
+| PII                 | Include a synthetic email/phone/NIK                                     | provider prompt contains redaction markers; DB message remains authoritative   |
+| Unsafe knowledge    | Ingest text containing an instruction override                          | unsafe chunks are excluded; no evidence if none remain                         |
+| Oversized prompt    | Use synthetic content above the configured budget                       | `budget_exceeded`; no chat call                                                |
+| Provider 401        | Use an intentionally revoked test credential in an isolated environment | terminal safe provider error; no upstream body or credential in UI/logs        |
+| Provider 429/5xx    | Use a controlled test proxy or adapter fixture                          | bounded retry with backoff, then success or `provider_failed`                  |
+| Worker interruption | Stop worker after claim, wait past the lease, restart                   | lease recovery; at most one active run                                         |
+| Knowledge changes   | Re-index a source after queueing but before draft completion            | old run becomes `stale`; regenerate against the new version                    |
+| Emergency stop      | Enable kill switch while a run is queued                                | worker records `off`; no provider or outbound call                             |
+| Closed conversation | Close a conversation after draft completion, then attempt approval      | approval is rejected; no message or outbound intent                            |
+| Approval replay     | Submit the same approved run twice                                      | both requests resolve to the same outbound message                             |
+| Redis cache failure | Pause Redis with `QUERY_EMBEDDING_CACHE_ENABLED=true`                   | silent bypass; draft succeeds via direct provider call; outcome="error" logged |
 
 ## 4. Staging real-provider proof
 
