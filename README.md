@@ -22,22 +22,23 @@
 
 ### Backend
 
-| Layer               | Technology                                       |
-| ------------------- | ------------------------------------------------ |
-| Runtime             | Node.js 22 (ESM)                                 |
-| API framework       | Express 5                                        |
-| Language            | TypeScript 5 (strict)                            |
-| Schema validation   | Zod                                              |
-| ORM / DB access     | Prisma (raw SQL migrations via `pg`)             |
-| Database            | PostgreSQL 16 + pgvector                         |
-| Queue               | Redis (outbox polling)                           |
-| Real-time transport | Socket.IO + Redis adapter                        |
-| Object storage      | S3-compatible (MinIO locally, AWS S3 in prod)    |
-| Malware scanning    | ClamAV                                           |
-| Auth                | OIDC (session-based)                             |
-| Observability       | OpenTelemetry + Prometheus + Grafana + pino      |
-| Monorepo            | Turborepo + pnpm workspaces                      |
-| CI quality gate     | Prettier · ESLint · tsc · Vitest · OpenAPI check |
+| Layer                 | Technology                                          |
+| --------------------- | --------------------------------------------------- |
+| Runtime               | Node.js 22 (ESM)                                    |
+| API framework         | Express 5                                           |
+| Language              | TypeScript 5 (strict)                               |
+| Schema validation     | Zod                                                 |
+| ORM / DB access       | Prisma (raw SQL migrations via `pg`)                |
+| Database              | PostgreSQL 16 + pgvector                            |
+| Queue                 | PostgreSQL transactional outbox polling             |
+| Real-time transport   | Socket.IO + Redis adapter                           |
+| Query embedding cache | Optional tenant-scoped Redis cache in the AI worker |
+| Object storage        | S3-compatible (MinIO locally, AWS S3 in prod)       |
+| Malware scanning      | ClamAV                                              |
+| Auth                  | OIDC (session-based)                                |
+| Observability         | OpenTelemetry + Prometheus + Grafana + pino         |
+| Monorepo              | Turborepo + pnpm workspaces                         |
+| CI quality gate       | Prettier · ESLint · tsc · Vitest · OpenAPI check    |
 
 ### AI / LLM
 
@@ -272,16 +273,16 @@ This is a **Turborepo monorepo** with two top-level namespaces:
 
 ### Infrastructure (local Docker Compose)
 
-| Service               | Port        | Purpose                                     |
-| --------------------- | ----------- | ------------------------------------------- |
-| PostgreSQL + pgvector | 5433        | Primary database + vector similarity search |
-| Redis                 | 6379        | Outbox pub/sub + Socket.IO adapter          |
-| MinIO                 | 9000 / 9001 | S3-compatible object store for attachments  |
-| ClamAV                | 3310        | Malware scanning                            |
-| Mailpit               | 8025        | Local SMTP + email inspector                |
-| OTel Collector        | 4317 / 4318 | Trace and metric ingestion                  |
-| Prometheus            | 9090        | Metrics scraping                            |
-| Grafana               | 3001        | Dashboards                                  |
+| Service               | Port        | Purpose                                           |
+| --------------------- | ----------- | ------------------------------------------------- |
+| PostgreSQL + pgvector | 5433        | Primary database + vector similarity search       |
+| Redis                 | 6379        | Socket.IO adapter; optional query embedding cache |
+| MinIO                 | 9000 / 9001 | S3-compatible object store for attachments        |
+| ClamAV                | 3310        | Malware scanning                                  |
+| Mailpit               | 8025        | Local SMTP + email inspector                      |
+| OTel Collector        | 4317 / 4318 | Trace and metric ingestion                        |
+| Prometheus            | 9090        | Metrics scraping                                  |
+| Grafana               | 3001        | Dashboards                                        |
 
 ---
 
@@ -387,3 +388,5 @@ docker build -f infra/docker/Dockerfile.node --build-arg APP=api -t flowdesk/api
 ## Lines of Code
 
 **~79,000 lines** across all TypeScript and CSS source files (excluding lock files, generated files, build artifacts, and test snapshots).
+
+Query embedding cache configuration, invalidation, failure behavior, and verification: [runbook](docs/runbooks/query-embedding-cache.md). Disabled by default.

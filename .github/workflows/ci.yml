@@ -151,6 +151,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
+      redis:
+        image: redis:7.4.2-bookworm
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
       postgres:
         image: pgvector/pgvector:0.8.0-pg16-bookworm
         env:
@@ -177,6 +185,11 @@ jobs:
       - run: pnpm --filter @flowdesk/db test:integration
       - run: pnpm --filter @flowdesk/api test:integration
       - run: pnpm --filter @flowdesk/worker test:integration
+      - name: Query embedding cache with real Redis (required)
+        run: pnpm --filter @flowdesk/worker exec vitest run src/query-embedding-cache.redis.test.ts
+        env:
+          RUN_REDIS_INTEGRATION: "true"
+          REDIS_TEST_URL: redis://127.0.0.1:6379
 
   terraform:
     runs-on: ubuntu-24.04

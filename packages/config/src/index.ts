@@ -365,3 +365,33 @@ export function loadChannelEncryptionConfig(
 ): ChannelEncryptionConfig {
   return channelEncryptionConfigSchema.parse(environment);
 }
+
+// Query embedding reuse is optional and worker-only; disabled deployments need no Redis cache config.
+const queryEmbeddingCacheSchema = z
+  .object({
+    QUERY_EMBEDDING_CACHE_ENABLED: booleanString.default(false),
+    REDIS_URL: z
+      .url()
+      .refine((value) => ["redis:", "rediss:"].includes(new URL(value).protocol))
+      .optional(),
+    QUERY_EMBEDDING_CACHE_NAMESPACE: z
+      .string()
+      .regex(/^[a-zA-Z0-9_-]{1,64}$/)
+      .default("v1"),
+    QUERY_EMBEDDING_CACHE_TTL_SECONDS: z.coerce.number().int().min(1).max(604800).default(86400),
+    QUERY_EMBEDDING_CACHE_TIMEOUT_MS: z.coerce.number().int().min(10).max(1000).default(100),
+    QUERY_EMBEDDING_CACHE_MAX_ENTRIES: z.coerce.number().int().min(1).max(10000).default(1000)
+  })
+  .superRefine((config, context) => {
+    if (config.QUERY_EMBEDDING_CACHE_ENABLED && !config.REDIS_URL) {
+      context.addIssue({
+        code: "custom",
+        path: ["REDIS_URL"],
+        message: "REDIS_URL is required when query embedding cache is enabled"
+      });
+    }
+  });
+
+export function loadQueryEmbeddingCacheConfig(environment: NodeJS.ProcessEnv = process.env) {
+  return queryEmbeddingCacheSchema.parse(environment);
+}

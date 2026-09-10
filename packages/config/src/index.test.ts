@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   loadAiRuntimeConfig,
+  loadQueryEmbeddingCacheConfig,
   loadAuthConfig,
   loadChannelEncryptionConfig,
   loadHttpConfig,
@@ -297,5 +298,32 @@ describe("docker compose deployment contract", () => {
     expect(aiEnvironment).toContain("OPENAI_API_KEY: ${OPENAI_API_KEY:-}");
     expect(apiService).not.toContain("*worker-ai-environment");
     expect(workerService).toContain("*worker-ai-environment");
+  });
+});
+
+describe("loadQueryEmbeddingCacheConfig", () => {
+  it("defaults off without requiring Redis", () => {
+    expect(loadQueryEmbeddingCacheConfig({}).QUERY_EMBEDDING_CACHE_ENABLED).toBe(false);
+  });
+  it("requires Redis when enabled and permits TLS", () => {
+    expect(() =>
+      loadQueryEmbeddingCacheConfig({ QUERY_EMBEDDING_CACHE_ENABLED: "true" })
+    ).toThrow();
+    expect(
+      loadQueryEmbeddingCacheConfig({
+        QUERY_EMBEDDING_CACHE_ENABLED: "true",
+        REDIS_URL: "rediss://cache.example:6379"
+      }).QUERY_EMBEDDING_CACHE_ENABLED
+    ).toBe(true);
+    expect(() => loadQueryEmbeddingCacheConfig({ REDIS_URL: "https://cache.example" })).toThrow();
+  });
+  it.each([
+    { QUERY_EMBEDDING_CACHE_ENABLED: "yes" },
+    { QUERY_EMBEDDING_CACHE_TTL_SECONDS: "0" },
+    { QUERY_EMBEDDING_CACHE_TIMEOUT_MS: "1001" },
+    { QUERY_EMBEDDING_CACHE_MAX_ENTRIES: "0" },
+    { QUERY_EMBEDDING_CACHE_NAMESPACE: "bad:namespace" }
+  ])("rejects invalid config %j", (config) => {
+    expect(() => loadQueryEmbeddingCacheConfig(config)).toThrow();
   });
 });

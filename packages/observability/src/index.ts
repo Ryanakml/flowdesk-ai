@@ -121,6 +121,8 @@ export {
   recordRealtimeDroppedHint,
   recordMediaLifecycle,
   recordAiDraftRun,
+  recordQueryEmbeddingCache,
+  recordQueryEmbeddingDuration,
   recordAutoSendOutcome,
   setEmergencyKillswitchActive,
   getPrometheusMetrics,

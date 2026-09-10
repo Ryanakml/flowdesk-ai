@@ -12,6 +12,33 @@ interface HistogramMetric {
   labels: Record<string, string>;
 }
 
+const queryEmbeddingCacheTotal = new Map<string, CounterMetric>();
+const queryEmbeddingDuration = new Map<string, { count: number; sum: number }>();
+
+export function recordQueryEmbeddingCache(
+  outcome:
+    | "hit"
+    | "miss"
+    | "bypass"
+    | "error"
+    | "invalid"
+    | "coalesced"
+    | "lock_wait"
+    | "admission_rejected"
+    | "provider_call"
+): void {
+  const current = queryEmbeddingCacheTotal.get(outcome);
+  if (current) current.value += 1;
+  else queryEmbeddingCacheTotal.set(outcome, { value: 1, labels: { outcome } });
+}
+
+export function recordQueryEmbeddingDuration(stage: "lookup" | "provider", seconds: number): void {
+  const current = queryEmbeddingDuration.get(stage) ?? { count: 0, sum: 0 };
+  current.count += 1;
+  current.sum += seconds;
+  queryEmbeddingDuration.set(stage, current);
+}
+
 const httpRequestsTotal = new Map<string, CounterMetric>();
 const httpRequestDuration = new Map<string, HistogramMetric>();
 const authDenialsTotal = new Map<string, CounterMetric>();
@@ -323,6 +350,8 @@ export function setEmergencyKillswitchActive(active: boolean): void {
 }
 
 export function resetMetrics(): void {
+  queryEmbeddingCacheTotal.clear();
+  queryEmbeddingDuration.clear();
   httpRequestsTotal.clear();
   httpRequestDuration.clear();
   authDenialsTotal.clear();
@@ -501,5 +530,20 @@ export function getPrometheusMetrics(): string {
   lines.push("# TYPE emergency_killswitch_active gauge");
   lines.push(`emergency_killswitch_active ${emergencyKillswitchActive}`);
 
+  lines.push(
+    "# HELP query_embedding_cache_total Query embedding cache decisions and actual upstream calls."
+  );
+  lines.push("# TYPE query_embedding_cache_total counter");
+  for (const item of queryEmbeddingCacheTotal.values()) {
+    lines.push(`query_embedding_cache_total{${serializeLabels(item.labels)}} ${item.value}`);
+  }
+  lines.push(
+    "# HELP query_embedding_duration_seconds Query embedding lookup and provider duration."
+  );
+  lines.push("# TYPE query_embedding_duration_seconds summary");
+  for (const [stage, item] of queryEmbeddingDuration) {
+    lines.push(`query_embedding_duration_seconds_count{stage="${stage}"} ${item.count}`);
+    lines.push(`query_embedding_duration_seconds_sum{stage="${stage}"} ${item.sum.toFixed(6)}`);
+  }
   return lines.join("\n") + "\n";
 }

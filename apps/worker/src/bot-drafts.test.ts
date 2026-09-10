@@ -7,6 +7,7 @@ import {
   type AiChatProvider,
   type AiEmbeddingProvider
 } from "@flowdesk/providers";
+import { createQueryEmbeddingCache, type EmbeddingCacheStore } from "./query-embedding-cache.js";
 import { processBotDraftBatch } from "./bot-drafts.js";
 
 function result(rows: unknown[]) {
@@ -320,7 +321,14 @@ describe("durable bot draft worker", () => {
       generateReplyDraft
     } as AiChatProvider;
 
-    await processBotDraftBatch(db, { chatProvider, embeddingProvider, chatModel: "test" });
+    const cachedGenerate = vi.fn();
+    await processBotDraftBatch(db, {
+      chatProvider,
+      embeddingProvider,
+      chatModel: "test",
+      queryEmbeddingCache: { generate: cachedGenerate }
+    });
+    expect(cachedGenerate).not.toHaveBeenCalled();
     expect(state.status).toBe("safety_blocked");
     expect(generateEmbeddings).not.toHaveBeenCalled();
     expect(generateReplyDraft).not.toHaveBeenCalled();
@@ -407,5 +415,71 @@ describe("durable bot draft worker", () => {
       httpStatus: 429
     });
     expect(logged[0]!.context["httpBody"]).toContain("Resource exhausted");
+  });
+});
+
+describe("draft worker query embedding cache integration", () => {
+  it("uses redacted tenant input, reuses only embeddings, and still generates grounded replies per run", async () => {
+    const values = new Map<string, string>();
+    const store: EmbeddingCacheStore = {
+      get: (key) => Promise.resolve(values.get(key) ?? null),
+      acquire: () => Promise.resolve(true),
+      fill: (key, _token, value) => {
+        values.set(key, value);
+        return Promise.resolve(true);
+      },
+      release: () => Promise.resolve()
+    };
+    const embeddingProvider = new FakeEmbeddingProvider();
+    const embeddingSpy = vi.spyOn(embeddingProvider, "generateEmbeddings");
+    const chatProvider = new FakeAiChatProvider();
+    const chatSpy = vi.spyOn(chatProvider, "generateReplyDraft");
+    const queryEmbeddingCache = createQueryEmbeddingCache({
+      store,
+      provider: embeddingProvider,
+      environment: "test",
+      providerIdentity: "fake",
+      model: "fake",
+      namespace: "v1",
+      ttlMs: 60000,
+      providerTimeoutMs: 1000
+    });
+    const cacheSpy = vi.spyOn(queryEmbeddingCache, "generate");
+    for (let i = 0; i < 2; i++) {
+      const { db, state } = createMockDb({
+        customerText: "Email saya private@example.com. Apakah garansi satu tahun?"
+      });
+      const dbSpy = vi.spyOn(db, "query");
+      await processBotDraftBatch(db, {
+        embeddingProvider,
+        chatProvider,
+        chatModel: "fake",
+        queryEmbeddingCache
+      });
+      expect(state.status).toBe("completed");
+      expect(state.citations.length).toBeGreaterThan(0);
+      expect(dbSpy.mock.calls.some(([sql]) => String(sql).includes("public.vector"))).toBe(true);
+    }
+    expect(cacheSpy).toHaveBeenCalledWith("org-1", expect.stringContaining("[EMAIL_REDACTED]"));
+    expect(embeddingSpy).toHaveBeenCalledTimes(1);
+    expect(chatSpy).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(embeddingSpy.mock.calls)).not.toContain("private@example.com");
+    expect(JSON.stringify([...values])).not.toContain("private@example.com");
+  });
+
+  it("does not consult cache for a stale knowledge run", async () => {
+    const { db, state } = createMockDb({
+      runKnowledgeVersionId: "old",
+      currentKnowledgeVersionId: "new"
+    });
+    const generate = vi.fn();
+    await processBotDraftBatch(db, {
+      embeddingProvider: new FakeEmbeddingProvider(),
+      chatProvider: new FakeAiChatProvider(),
+      chatModel: "fake",
+      queryEmbeddingCache: { generate }
+    });
+    expect(state.status).toBe("stale");
+    expect(generate).not.toHaveBeenCalled();
   });
 });
