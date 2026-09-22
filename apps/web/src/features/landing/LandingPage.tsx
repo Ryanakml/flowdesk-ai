@@ -209,14 +209,9 @@ export function LandingPage() {
                 <div className="absolute -top-8 left-1/2 h-48 w-4/5 -translate-x-1/2 rounded-full bg-primary/30 blur-3xl" />
                 <div className="relative overflow-hidden rounded-xl border bg-card shadow-2xl">
                   <img
-                    src="/landing-dashboard-light.png"
+                    src="/landing-dashboard-dark.webp"
                     alt="FlowDesk workspace preview"
-                    className="block w-full object-cover dark:hidden"
-                  />
-                  <img
-                    src="/landing-dashboard-dark.png"
-                    alt="FlowDesk workspace preview"
-                    className="hidden w-full object-cover dark:block"
+                    className="block w-full object-cover"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-background sm:h-48" />
                 </div>
@@ -324,8 +319,8 @@ export function LandingPage() {
             <Card className="overflow-hidden border bg-muted/30 shadow-xl">
               <CardContent className="p-0">
                 <img
-                  src="/landing-dashboard-dark.png"
-                  alt="FlowDesk inbox and analytics preview"
+                  src="/landing-dashboard-dark-1.webp"
+                  alt="FlowDesk AI-assisted inbox preview"
                   className="w-full object-cover"
                 />
               </CardContent>
